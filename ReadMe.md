@@ -1,0 +1,1 @@
+Перевод книги [Intermediate Python](https://leanpub.com/intermediatepython) Obi Ike-Nwosu. Перевод выполнен с сокращениями, часть текста и примеры изменены.
