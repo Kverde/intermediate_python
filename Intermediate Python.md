@@ -164,3 +164,300 @@ The number 6 is even
 
 Отступы используются для обозначения блоков кода таких как тела функций, условий, циклов и классов. Ведущий пробел в начале логической строки используется для вычисления отступа для этой строки, который, в свою очередь, используется для определения группировки оператора. Отступ используемый в теле блока всегда должен совпадать с отступом первого оператора в блоке.
 
+### 3. Строки
+
+Строки в Python обрамляются двойными "..." или одинарными '...' кавычками. Спецсимволы указываются внутри строки с экранированием:
+
+```python
+# кавычка используется как апостроф, поэтому мы экранируем её чтобы 
+# предотвратить завершение строки
+>>> name = 'men\'s'
+>>> name
+"men's"
+>>>
+```
+
+Для того чтобы отключить обработку спецсимволов в строке, добавьте перед строкой символ **r**:
+
+```python
+>>> print('C:\some\name') # здесь \n означает перевод строки!
+C:\some
+ame
+>>> print(r'C:\some\name') # добавлен r перед кавычкой
+C:\some\name
+```
+
+Многострочные строковые литералы задаются тройными кавычками. Перевод строки автоматически добавляется при достижении конца строки:
+
+```python
+>>> para = """hello world I am putting together a
+... book for beginners to get to the next level in python"""
+# Обратите внимание на символ перевод строки
+>>> para
+'hello world I am putting together a \nbook for beginners to get to the next level in python'
+# При выводе текст разделяется на несколько срок
+>>> print(para)
+hello world I am putting together a
+book for beginners to get to the next level in python
+>>>
+
+Чтобы перевод строки не добавлялся используйте символ **\** в конце строки:
+
+​```python
+>>> para = """hello world I am putting together a \
+... book for beginners to get to the next level in python"""
+>>> para
+'hello world I am putting together a book for beginners to get to the next level in python'
+>>> print(para)
+hello world I am putting together a book for beginners to get to the next level in python
+>>>
+```
+
+Строки неизменяемые, один раз созданная строка не может быть изменена. Для символов отдельного типа нет, они являются строками длинной в 1 символ. Строки являются одним из типов последовательностей, поэтому поддерживают все операции с последовательностями, за исключением присваивания по индексу из-за неизменяемости. Обращение к отдельному символу происходит по индексу:
+
+```python
+>>> name = 'obiesie'
+>>> name[1]
+'b'
+>>>
+```
+
+Строки соединяются оператором **+**:
+
+```python
+>>> name = 'obiesie'
+>>> surname = " Ike-Nwosu"
+>>> full_name = name + surname
+>>> full_name
+'obiesie Ike-Nwosu'
+>>>
+```
+
+Написанные рядом строковые литералы соединяются автоматически:
+
+```python
+>>> 'Py' 'thon'
+'Python'
+>>>
+```
+
+Встроенная функция **len** возвращает длину строки:
+
+```python
+>>> name = "obi"
+>>> len(name)
+3
+>>>
+```
+
+### 3.4 Управляющие конструкции
+
+#### if-else и if-elif-else
+
+Оператор **if** применяется для условного выполнения блока кода:
+
+```python
+>>> name = "obi"
+>>> if name == "obi":
+...     print("Hello Obi")
+...
+Hello Obi
+>>>
+```
+
+За оператором **if** следует ноль или больше операторов **elif** и не обязательный оператор **else**. Если не один из операторов **if** или **elif** не был выполнен, то выполняется блок **else**:
+
+```python
+>>> if name == "obi":
+...     print("Hello Obi")
+... elif name == "chuks":
+...     print("Hello chuks")
+... else:
+...     print("Hello Stranger")
+Hello Stranger
+>>>
+```
+
+#### for и range
+
+В Python два вида циклов: **while** и **for**.
+
+Оператор **for** используется для перебора последовательностей (list, set, tuple и т.д.). В общем случае, цикл **for** используется для перебора любых объектов реализующих протокол итератора Python (python iterator protocol). Подробнее это будет описано в следующих главах.
+
+Пример использования цикла **for**:
+
+```python
+>>> names = ["Joe", "Obi", "Chris", "Nkem"]
+>>> for name in names:
+...     print(name)
+...
+Joe
+Obi
+Chris
+Nkem
+>>>
+```
+
+Большинство языков программирования использует синтаксис похожий на этот для перебора последовательности чисел:
+
+```
+for(int x = 10; x < 20; x = x+1) {
+// do something here
+}
+```
+
+В Python используется конструкция **range()** для генерации арифметической прогрессии целых чисел:
+
+```python
+>>> for i in range(10, 20):
+...     print i
+...
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+```
+
+Функция range(start, stop, step) допускает три аргумента. Значение параметра **stop** не входит в возвращаемую последовательность.
+
+#### while
+
+Оператор **while** выполняет блок кода пока условное выражение вычисляется в **True**:
+
+```python
+>>> counter = 10
+>>> while counter > 0: # условное выражение 'counter > 0'
+...     print(counter)
+...     counter = counter - 1
+...
+10
+9
+8
+7
+6
+5
+4
+3
+2
+1
+```
+
+#### break и continue
+
+Команда **break** завершает выполнение цикла, после **break** происходит немедленный выход из цикла.
+
+```python
+>>> for i in range(10):
+...     if i == 5:
+...         break
+...     else:
+...         print(i)
+...
+0
+1
+2
+3
+4
+```
+
+Команда **continue** принудительно запускает следующую итерацию цикла. Все команды внутри цикла после **continue** игнорируются.
+
+```python
+>>> for i in range(10):
+        # если i равно 5 то начинаем новую итерацию цикла, без выполнения остальных команд
+...     if i == 5:
+...         continue
+...     print("The value is " + str(i))
+...
+The value is 0
+The value is 1
+The value is 2
+The value is 3
+The value is 4
+# no printed value for i == 5
+The value is 6
+The value is 7
+The value is 8
+The value is 9
+```
+
+В примере выше, значение 5 не напечатано, из-за условия и команды **continue**. Все остальные значения напечатаны.
+
+#### циклы и else 
+
+В Python ключевое слово **else** применяется вместе с операторами цикла. Блок после **else** выполняется если цикл не был завершён оператором **break**.
+
+```python
+# loop exits normally
+>>> for i in range(10):
+...     print(i)
+... else:
+...     print("I am in quirky else loop")
+...
+0
+1
+2
+3
+4
+5
+6
+7
+8
+9
+I am in quirky else loop
+```
+
+Если цикл завершён оператором **break**, то блок **else** пропускается:
+
+```python
+>>> for i in range(10):
+...     if i == 5:
+...        break
+...     print(i)
+... else:
+...     print("I am in quirky else loop")
+...
+0
+1
+2
+3
+4
+```
+
+#### Enumerate
+
+Иногда нужно перебрать коллекцию, поучая одновременно индекс и значение элементов. Можно использовать такой подход:
+
+```python
+>>> names = ["Joe", "Obi", "Chris", "Jamie"]
+>>> name_count = len(names)
+>>> index = 0
+>>> while index < name_count:
+...   print("{}. {}".format(index, names[index]))
+...   index = index + 1
+...
+0. Joe
+1. Obi
+2. Chris
+3. Jamie
+```
+
+В Python есть более эффективное решение с функцией **enumerate**:
+
+```python
+>>> for index, name in enumerate(names):
+...     print("{}. {}".format(index, name))
+...
+0. Joe
+1. Obi
+2. Chris
+3. Jamie
+>>>
+```
+
