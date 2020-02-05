@@ -460,4 +460,70 @@ I am in quirky else loop
 3. Jamie
 >>>
 ```
+### 3.5 Функции
+
+Именованные функции определяются ключевым словом **def**, за которым следует название функции и список параметров в скобках. Ключевое слово **return** используется для возвращения значения функции:
+
+```python
+def full_name(first_name, last_name):
+    return " ".join((first_name, last_name))
+```
+
+Для вызова функции используется её имя, параметры передаются в скобках:
+
+```python
+full_name("Obi", "Ike-Nwosu")
+```
+
+Функции могут вернуть несколько значений в виде кортежа. В следующим примере функция возвращает частное и остаток от деления:
+
+```python
+>>> def divide(a, b):
+...     return divmod(q, r)
+...
+>>> divide(7, 2)
+(3, 1)
+>>>
+```
+
+Функция без **return** всегда возвращает **None**:
+
+```python
+>>> def print_name(first_name, last_name):
+...     print(" ".join((first_name, last_name)))
+...
+>>> print_name("Obi", "Ike-Nwosu")
+Obi Ike-Nwosu
+>>> x = print_name("Obi", "Ike-Nwosu")
+Obi Ike-Nwosu
+>>> x
+>>> type(x)
+<type 'NoneType'>
+>>>
+```
+
+Ключевое слово **return** может использоваться без значения чтобы прервать выполнение функции:
+
+```python
+>>> def dont_return_value():
+...     print("How to use return keyword without a value")
+...     return
+...
+>>> dont_return_value()
+```
+
+Выражение **lambda** позволяет объявить функцию без имени. Такая функция состоит всего из одного выражения которое и является значением функции. Поэтому не требуется использовать **return**.
+
+
+```python
+>>> square_of_number = lambda x: x**2
+>>> square_of_number
+<function <lambda> at 0x101a07158>
+>>> square_of_number(2)
+4
+>>>
+```
+
+Функция созданная через **lambda** эквивалентна именованной функции определённой через **def**.
+
 
