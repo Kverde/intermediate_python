@@ -980,7 +980,7 @@ UnboundLocalError: local variable 'a' referenced before assignment
 
 ### 4.5 eval()
 
-Встроенная функция `eval` запускает выржение на python переданное в виде строки или объекта типа `code`. Сигнатура функции:
+Встроенная функция `eval` запускает выражение Python переданное в виде строки или объекта типа `code`. Сигнатура функции:
 
 ```python
 eval(expression, globals=None, locals=None)
