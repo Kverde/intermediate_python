@@ -8,7 +8,11 @@
 
 ## 1. Благодарности
 
-Благодарю всех кто помогал при написании и корректировке книги. 
+Текст с благодарностями автора оригинального издания без корректировок.
+
+I would love to take the opportunity to thank all who have reviewed and spotted issues in the manuscript. This includes but is not limited to Ngozi Nwosu for taking the time out to review the whole manual and point out a whole load of grammatical errors, Olivia Enewally, Roman Turna and Abhen Ng for pointing out some factual and grammatical errors.A whole lot of other people on Reddit have pointed out errors and to those people I am really grateful. 
+
+Without the input of all these people, this manuscript would be worth less than it currently is. Thank you all!
 
 ## 2. Введение
 
@@ -1041,3 +1045,346 @@ self.balance) \n\n'
 Если необязательные аргументы пропущены когда запускается в текущей области видимости. Если задан только `global` то они используется для глобальных и локальных переменных. 
 
 Если словарь переданный в `global` не содержит  ключа `__builtins__` то под этим ключом будет добавлена ссылка на пространство имён встроенных функций. Вставив под ключом `__builtins__` свой словарь можно добиться запрета или ограничения стандартных функций.
+
+## 5. Objects 201
+
+Любое значение в Python является объектом. Любой объект имеет идентификатор, тип и значение. Идентификатор объекта не меняется после создания объекта. 
+
+Функция `id(obj)` возвращает идентификатор объекта. В CPython идентификатор объекта это адрес объекта в памяти. В других реализациях Python идентификатор объекта может генерироваться по другому принципу, но он обязательно должен уникально идентифицировать объект в интерпретаторе.
+
+```python
+>>> n = 5
+>>> id(5)
+1573971952
+```
+
+Оператор `is` сравнивает идентификаторы двух объектов и возвращает логическое значение.
+
+```python
+>>> n1 = 6
+>>> n2 = 7
+>>> n1 is n2
+False
+```
+
+Функция `type()` возвращает тип объекта, тип тоже сам является объектом. Тип объекта, при нормальной работе, неизменяем. Тип объекта определяет операции которые поддерживает объект и возможный набор значений. Python динамический язык программирования потому что типы не связаны с переменными, так что переменная `x` сначала может ссылаться на число, а через некоторое время на строку.
+
+```python
+x = 1
+x = "Nkem"
+```
+
+В тоже время Python является строго типизированным языком, так как интерпретатор не меняет тип объекта автоматически. Это, например, означает что при сложении строки и числа будет сгенерировано исключение:
+
+```python
+>>> x = "Nkem"
+>>> x + 1
+Traceback (most recent call last):
+File "<stdin>", line 1, in <module>
+TypeError: Can't convert 'int' object to str implicitly
+```
+
+Такое поведение отлично от других языков, например, от JavaScript где интерпретатор неявно конвертирует число в строку и соединит их.
+
+Объекты Python бывают двух типов: изменяемые и неизменяемые.
+
+**Изменяемые объекты**
+
+Значения изменяемых объектов могут меняться. Например, список относится к изменяемым объектам, в него можно добавлять или удалять элементы:
+
+```python
+>>> a = [1, 2]
+>>> a.append(3)
+>>> a
+[1, 2, 3]
+```
+
+Значения в Python всегда передаются по ссылке, это, в частности, означает что при передачи ссылки на значение в метод (любой объект), внутри метода будет использоваться ссылка на то же значение. Демонстрация такого поведения:
+
+```python
+>>> x
+[1, 2, 3]
+>>> y = x
+# теперь x и y ссылаются на один список
+>>> x.extend([4, 5, 6])
+# изменение в x отражаются в y
+>>> y
+[1, 2, 3, 4, 5, 6]
+```
+`x` и `y` ссылаются на один объект поэтому неважно через какую ссылку было произведено изменение объекта. Важно понимать что `x` не содержит список, а только ссылку на него и при присваивании `y = x` в `y` так же помещается только ссылка на тот же самый список.
+
+**Неизменяемые объекты**
+
+Неизменяемые объекты не могут изменить своё значение. Кортежи являются неизменяемыми объектами: 
+
+```python
+>>> x = (1, 2, 3, 4)
+>>> x[0]
+1
+>>> x[0] = 10
+Traceback (most recent call last):
+File "<stdin>", line 1, in <module>
+TypeError: 'tuple' object does not support item assignment
+>>>
+```
+
+Неизменяемые объекты могут содержать изменяемые объекты. В этом случае значения изменяемых объектов может быть изменено, но не ссылка на сам изменяемый объект. Таким случаем является список внутри кортежа:
+
+```python
+>>> t = [1, 2, 3, 4]
+>>> x = t,
+>>> x
+([1, 2, 3, 4],)
+>>> x[0]
+[1, 2, 3, 4]
+>>> x[0].append(10)
+>>> x
+([1, 2, 3, 4, 10],)
+>>>
+```
+
+###  5.1 Слабые и сильные ссылки на объекты
+
+Объекты Python получают ссылки когда они связываются с именами. Связывание может произойти после присваивания, вызова метода с параметрами или другими способами. Каждый раз когда объект получает ссылку увеличивается счётчик ссылок. Значение счётчика ссылок можно получить функцией `sys.getrefcout()`:
+
+```python
+import sys
+
+l = []
+m = l
+
+print(sys.getrefcount(l)) # 3
+```
+В примере три ссылки: `l`, `m` и ссылка из параметра `getrefcount`.
+
+В Python применяется два типа ссылок: слабые и сильные. Если это точно не указано, то при упоминании ссылок речь идет о сильных ссылках, как в приведенном выше примере три сильные ссылки.
+
+Главная особенность сильных ссылок — когда они создаются то счётчик ссылок увеличивается на 1. Сборщик мусора не удалит объект на который есть сильная ссылка, так как он удаляет только объекты счетчик ссылок которых равен 0.
+
+Слабые ссылки не увеличивают счётчик ссылок объекта. Модуль `weakref` предназначен для работы со слабыми ссылками:
+
+```python
+import sys
+import weakref
+
+
+class Foo:
+    pass
+
+
+a = Foo()
+b = a
+print(sys.getrefcount(a)) # 3
+
+c = weakref.ref(a)
+print(sys.getrefcount(a)) # 3
+
+print(c()) # <__main__.Foo object at 0x01481F88>
+print(type(c)) # <class 'weakref'>
+```
+
+Функция `weakref.ref` возвращает объект при вызове которого (как вызов функции `c()`) возвращается объект на который слабая ссылка. Другая функция `weakref.proxy` так же создаёт слабую ссылку и возвращает объект который может использоваться как оригинальный объект без необходимости вызова:
+
+```python
+import sys
+import weakref
+
+
+class Foo:
+    pass
+
+    def get(self):
+        return 23
+
+
+a = Foo()
+b = weakref.proxy(a)
+print(sys.getrefcount(a)) # 2
+
+print(b) # <__main__.Foo object at 0x03911F88>
+print(b.get()) # 23
+```
+
+Когда все сильные ссылки на объект удалены, слабые ссылки тоже ссылку на объект и объект готов для уничтожения сборщиком мусора.
+
+```python
+import weakref
+
+
+class Foo:
+    pass
+
+
+a = Foo()
+b = weakref.ref(a)
+
+del a
+
+print(b) # <weakref at 0x03799AF0; dead>
+print(b()) # None
+```
+
+### 5.2 Иерархия типов
+
+В этом разделе перечислены категории встроенных типов Python.
+
+#### Тип None
+
+The None type is a singleton object that has a single value and this value is accessed through the built-in name None. 
+
+Тип **None** это синглтон который содержит только одно значение и это значение доступно под встроенным именем `None`. Этот тип используется для обозначеия отсутствия значения, например, когда функция не возвращает значения в явном виде:
+
+```python
+def print_name(name):
+    print(name)
+
+
+name = print_name("nkem")
+
+print(name) # None
+print(type(name)) # <class 'NoneType'>
+```
+
+При преобразованию к логическому типу `None` становится `False`:
+
+```python
+print(bool(None)) # False
+```
+
+#### Тип NotImplemented
+
+Тип **NotImplemented** так же является синглтоном с одним значением. Значение этого объекта доступно под встроенным именем `NotImplemented`. Такой объект используется чтобы делегировать поиск реализации метода интерпретатору вместо генерации исключений `NotImplementedError`:
+
+
+```python
+class Foo:
+    def __init__(self, value):
+        self.value = value
+
+    def __eq__(self, other):
+        if isinstance(other, Foo):
+            print('Сравнение экземпляра Foo с другим экземпляром Foo')
+            return other.value == self.value
+
+        elif isinstance(other, Bar):
+            print('Сравнение экземпляра Foo с экземпляром Bar')
+            return other.value == self.value
+
+        print('Невозможно сравнить экземпляр Foo с другим классом')
+        return NotImplemented
+
+
+class Bar:
+    def __init__(self, value):
+        self.value = value
+
+    def __eq__(self, other):
+        if isinstance(other, Bar):
+            print('Сравнение экземпляра Bar с другим экземпляром Bar')
+            return other.value == self.value
+
+        print('Невозможно сравнить экземпляр Bar с другим классом')
+        return NotImplemented
+```
+
+Эффект возврата `NotImplemented` наблюдается при попытке сравнения. `a == b` приводят к вызову `a.__eq__(b)`. В примере, классы `Foo` и `Bar` содержат реализацию для сравнения себя с другими объектами:
+
+```python
+f = Foo(1)
+b = Bar(1)
+
+res = f == b # Сравнение экземпляра Foo с экземпляром Bar
+print(res) # True
+
+res = f == f # Сравнение экземпляра Foo с другим экземпляром Foo
+print(res) # True
+
+res = b == f # Сравнение экземпляра Bar с другим экземпляром Bar
+print(res) # True
+```
+
+If b is compared with f then b.__eq__(f) is invoked and the NotImplemented object is returned
+because the implementation of __eq__() in Bar only supports comparison with a Bar instances.
+
+Если `b` сравнивается с `f` то вызывается `b.__eq__(f)` и возвращается объект `NotImplemented`, так как реализация в `Bar` поддерживает сравнение только с экземпляром `Bar`. Несмотря на это операция сравнения будет выполнена:
+
+```python
+res = b == f
+# Сравнение экземпляра Bar с другим экземпляром Bar
+# Сравнение экземпляра Foo с экземпляром Bar
+print(res) # True
+```
+
+Вызов  метода `b.__eq__(f)` возвращает `NotImplemented` заставляю интерпретатор вызывать `__eq__()` у объекта класса `Foo` и так как в этом методе сравнение реализовано, возвращается корректный результат сравнения.
+
+Объект `NotImplmented` преобразовывается к логическому типу как `True`.
+
+```python
+print(bool(NotImplemented)) # True
+```
+
+#### Тип Ellipsis
+
+Это ещё один синглтон с одним объектом-значением. Значение этого объекта доступно через литерал `...` или встроенное имя `Ellipsis`. Логическое значение этого объекта True:
+
+```python
+print(bool(...)) # True
+```
+Объект `Ellipsis` используется для индексации матриц, подробнее о нем написано в [документации по numpy](https://docs.scipy.org/doc/numpy/user/basics.indexing.html).
+
+#### Числовые типы
+
+Объекты числовых типов неизменяемы, созданное однажды значение не может быть изменено. Числовые типы делятся на несколько категорий.
+
+**Целые числа**
+
+Класс `int` представляет множество  положительных и отрицательных целых чисел. Целые числа не ограничены размером:
+
+```python
+print(238**238)
+#42200323427409150751742179532592018252808661114071266629718376939092568551075505740268077803623642715001998769421215763628719631633378375087756319383725641630331895773386010866243028159828607385899087848942302738709343403640250275314218243930567432731458807734886574283968918955323573297631562415292893276034393336066052132808455118105272470307339550216091253570417050545677371810192238471803263478546492058686483752405946094606978411379079233793804753705243644236607675749522119768311584522527886912942059070222789851175661909205254663263392466134105108288691503104
+```
+
+**Логическое значения**
+
+Тип `bool` представляет значения `True` и `False`.  `bool` является подтипом `int`:
+
+```python
+print(type(True).__base__) # <class 'int'>
+```
+
+Значения `False` и `True` ведут себя как 0 и 1 соотвественно. При конвертации в строку получаются значения "True" и "False":
+
+```python
+x = 1
+y = True
+print(x + y) # 2
+
+a = 1
+b = False
+print(a + b) # 1
+
+print(b == 0) # True
+print(y == 1) # True
+
+print(str(True)) # 'True'
+print(str(False)) # 'False'
+```
+
+
+
+2. Float: These represent machine-level only double precision floating point numbers. The
+underlying machine architecture and specific python implementation determines the accepted range and the handling of overflow; so CPython will be limited by the underlying C language while Jython will be limited by the underlying Java language.
+
+
+
+3. Complex Numbers: These represent complex numbers as a pair of machine-level double
+precision floating point numbers. The same caveats apply as for floating point numbers.
+Complex numbers can be created using the complex keyword as shown in the following
+example.
+>>> complex(1,2)
+(1+2j)
+>>>
+Complex numbers can also be created by using a number literal prefixed with a j. For instance, the
+previous complex number example can be created by the expression, 1+2j. The real and imaginary
+parts of a complex number z can be retrieved through the read-only attributes z.real and z.imag.
