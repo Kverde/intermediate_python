@@ -911,29 +911,20 @@ help(list)
 
 ### 4.4 Области видимости
 
-Область видимости это часть программы в которой множество имён (пространств имён) видимы и достыпны напрямую. Прямой доступ важная характеристика области видимости и будет обяснена при разговоре о классах. В простом смысле, это означает что имя может использовать как есть, без использования точки для доступа к имени, как например `SomeClassOrModule.name`. Во время выполнения следующие области видимости могут быть доступны
-
-1. Inner most scope with local names
-2. The scope of enclosing functions if any (this is applicable for nested functions)
-3. The current module’s globals scope
-4. The scope containing the builtin name-space.
+Область видимости это часть программы в которой множество имён (пространств имён) видимы и доступны напрямую. Прямой доступ важная характеристика области видимости и будет объяснена при разговоре о классах. В простом смысле, это означает что имя может использовать как есть, без использования точки для доступа к имени, как например `SomeClassOrModule.name`. Во время выполнения следующие области видимости могут быть доступны
 
 1. Самая внутренняя область видимости с локальными именами.
 2. Область видимости внешней функции если она есть (для вложенных функций)
 3. Глобальная область видимости текущего модуля
 4. Пространство имён встроенных функций
 
-При использовании имени интерпретатор ищет в пространствах имён областей видимости в порядке указнном выше и если имя не найдено генерирует исключние.
+При использовании имени интерпретатор ищет в пространствах имён областей видимости в порядке указном выше и если имя не найдено генерирует исключение.
 
-Python supports static scoping also known as lexical scoping; this means that the visibility of a set of name bindings can be inferred by only inspecting the program text.
-
-Python поддерживает статическое пространство имён (static scoping,  lexical scoping). Это означает что видимость множества свяазанных имён может быть выведено только просмотром текста программы. 
+Python поддерживает статическое пространство имён (static scoping,  lexical scoping). Это означает что для определения того какая переменная используется в данном блоке достаточно просмотра текста программы. TODO Link
 
 #### Примечание
 
-Python has a quirky scoping rule that prevents a reference to an object in the global scope from being modified in a local scope; such an attempt will throw an UnboundLocalError exception. 
-
-Python содержин правила предотвращающие изменение имени в глобальной области видимости из локальной области области видимости. Попытка сделать это приведёт к исключению `UnboundLocalError`.
+Python содержит правила предотвращающие изменение имени в глобальной области видимости из локальной области области видимости. Попытка сделать это приведёт к исключению `UnboundLocalError`.
 
 ```python
 >>> a = 1
@@ -946,7 +937,7 @@ Traceback (most recent call last):
 UnboundLocalError: local variable 'a' referenced before assignment
 ```
 
-Для изменения объекта из глобальной области видимости в локальной облести видимости применяется ключевое слово `global`. Оно должно использоваться до того как происходит изменение объекта.
+Для изменения объекта из глобальной области видимости в локальной области видимости применяется ключевое слово `global`. Оно должно использоваться до того как происходит изменение объекта.
 
 ```python
 >>> a = 1
@@ -959,7 +950,7 @@ UnboundLocalError: local variable 'a' referenced before assignment
 2
 ```
 
-Ключевое слово `nonlocal` используется при необходимости изменитю привязку переменной во внешней не глобальной области видимости из внетренней области видимости. Это полезно во вложенных функциях (замыканиях). Пример использования `nonlocal` при определении объектов-счётчиков: 
+Ключевое слово `nonlocal` используется при необходимости изменения привязки переменной во внешней не глобальной области видимости из внутренней области видимости. Это полезно во вложенных функциях (замыканиях). Пример использования `nonlocal` при определении объектов-счётчиков: 
 
 ```python
 >>> def make_counter():
@@ -1353,7 +1344,7 @@ print(238**238)
 print(type(True).__base__) # <class 'int'>
 ```
 
-Значения `False` и `True` ведут себя как 0 и 1 соотвественно. При конвертации в строку получаются значения "True" и "False":
+Значения `False` и `True` ведут себя как 0 и 1 соответственно. При конвертации в строку получаются значения "True" и "False":
 
 ```python
 x = 1
@@ -1371,20 +1362,173 @@ print(str(True)) # 'True'
 print(str(False)) # 'False'
 ```
 
+**Числа с плавающей запятой**
 
+Тип `float` представляет числа с плавающей запятой. Точные ограничения этого типа зависят от реализации интерпретатора. В CPython тип `float` соответствует типу `double` в C. 
 
-2. Float: These represent machine-level only double precision floating point numbers. The
-underlying machine architecture and specific python implementation determines the accepted range and the handling of overflow; so CPython will be limited by the underlying C language while Jython will be limited by the underlying Java language.
+**Комплексные числа**
 
+Тип `complex` содержит пару числе с типом `float`. 
 
+```python
+c = complex(1, 2)
+print(c) # (1+2j)
+```
 
-3. Complex Numbers: These represent complex numbers as a pair of machine-level double
-precision floating point numbers. The same caveats apply as for floating point numbers.
-Complex numbers can be created using the complex keyword as shown in the following
+Комплексное число можно создать с помощью литерала:
+
+```python
+c = 3+5j
+print(type(c)) # <class 'complex'>
+```
+
+Реальная и мнимая часть комплексного числа доступна как свойства объекта:
+
+```python
+c = complex(1, 2)
+
+print(c.real) # 1.0
+print(c.imag) # 2.0
+```
+
+#### Последовательности
+
+Последовательности это конечные упорядоченные коллекции объектов. Последовательности индексируются целыми числами, в Python допустимо использование отрицательных индексов. Последовательности делятся на две категории: изменяемые и неизменяемые.
+
+##### Неизменяемые последовательности
+
+An immutable sequence type object is one whose value cannot change once it is created. This means that the collection of objects that are directly referenced by an immutable sequence is fixed. The collection of objects referenced by an immutable sequence maybe composed of mutable objects whose value may change at runtime but the mutable object itself that is directly referenced by an immutable sequence cannot be changed. For example, a tuple is an immutable sequence but if one of the elements in the tuple is a list, a
+mutable sequence, then the list can change but the reference to the list object that tuple holds
+cannot be changed as shown below:
+>>> t = [1, 2, 3], "obi", "ike"
+>>> type(t)
+<class 'tuple'>
+>>> t[0].append(4) # mutate the list
+>>> t
+([1, 2, 3, 4], 'obi', 'ike')
+>>> t[0] = [] # attempt to change the reference in tuple
+Traceback (most recent call last):
+File "<stdin>", line 1, in <module>
+TypeError: 'tuple' object does not support item assignment
+The following are built-in immutable sequence types:
+1. Strings: A string is an immutable sequence of Unicode code points or more informally an
+immutable sequence of characters. There is no char type in python so a character is just a
+string of length, 1. Strings in python can represent all unicode code points in the range U+0000
+- U+10FFFF. All text in python is Unicode and the type of the objects used to hold such text
+is str.
+2. Bytes: A bytes object is an immutable sequence of 8-bit bytes. Each bytes is represented
+by an integer in the range 0 <= x < 256. Bytes literals such as b'abc' and the built-in
+function bytes() are used to create bytes objects. Bytes object have an intimate relationship
+with strings. Strings are abstractions over text representation used in the computer; text is
+represented internally using binary or bytes. Strings are just sequences of bytes that have
+been decoded using an encoding such as UTF-8. The abstract characters of a string can also be
+encoded using available encodings such as UTF-8 to get the binary representation of the string
+in bytes objects. The relationship between bytes and stringsis illustrated with the following
 example.
->>> complex(1,2)
-(1+2j)
->>>
-Complex numbers can also be created by using a number literal prefixed with a j. For instance, the
-previous complex number example can be created by the expression, 1+2j. The real and imaginary
-parts of a complex number z can be retrieved through the read-only attributes z.real and z.imag.
+>>> b = b'abc'
+>>> b
+b'abc'
+>>> type(b)
+<class 'bytes'>
+>>> b = bytes('abc', 'utf-16') # encode a string to bytes using UTF-16 encoding
+>>> b
+b'\xff\xfea\x00b\x00c\x00'
+>>> b
+b'\xff\xfea\x00b\x00c\x00'
+>>> b.decode("utf-8") # decoding fails as encoding has been done with utf-16
+Traceback (most recent call last):
+File "<stdin>", line 1, in <module>
+UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+>>> b.decode("utf-16") # decoding to string passes
+Objects 201 38
+'abc'
+>>> type(b.decode("utf-16"))
+<class 'str'>
+3. Tuple: A tuple is a sequence of arbitrary python objects. Tuples of two or more items are
+formed by comma-separated lists of expressions. A tuple of one item is formed by affixing
+a comma to an expression while an empty tuple is formed by an empty pair of parentheses.
+This is illustrated in the following example.
+>>> names = "Obi", # tuple of 1
+>>> names
+('Obi',)
+>>> type(names)
+<class 'tuple'>
+>>> names = () # tuple of 0
+>>> names
+()
+>>> type(names)
+<class 'tuple'>
+>>> names = "Obi", "Ike", 1 # tuple of 2 or more
+>>> names
+('Obi', "Ike", 1)
+>>> type(names)
+<class 'tuple'>
+4. Mutable sequences: An immutable sequence type is one whose value can change after it has
+created. There are currently two built-in mutable sequence types - byte arrays and lists
+1. Byte Arrays: Bytearray objects are mutable arrays of bytes. Byte arrays are created using
+the built-in bytearray() constructor. Apart from being mutable and thus unhashable,
+byte arrays provide the same interface and functionality as immutable byte objects.
+Bytearrays are very useful when the efficiency offered by their mutability is required.
+For example, when receiving an unknown amount of data over a network, byte arrays
+are more efficient because the array can be extended as more data is received without
+having to allocate new objects as would be the case if the immutable byte type was used.
+2. Lists: Lists are a sequence of arbitrary Python objects. Lists are formed by placing a
+comma-separated list of expressions in square brackets. The empty list is formed with
+the empty square bracket, []. A list can be created from any iterable by passing such
+iterable to the list method. The list data structure is one of the most widely used data
+type in python.
+Sequence types have some operations that are common to all sequence types. These are described
+in the following table; x is an object, s and t are sequences and n, i, j, k are integers.
+Objects 201 39
+Operation Result
+x in s True if an item of s is equal to x, else False
+x not in s False if an item of s is equal to x, else True
+s + t the concatenation of s and t
+s * n or n * s n shallow copies of s concatenated
+s[i] ith item of s, origin 0
+s[i:j] slice of s from i to j
+s[i:j:k] slice of s from i to j with step k
+len(s) length of s
+min(s) smallest item of s
+max(s) largest item of s
+s.index(x[, i[, j]]) index of the first occurrence of x in s (at or after index i and
+before index j)
+s.count(x) total number of occurrences of x in s
+Note
+1. Values of n that are less than 0 are treated as 0 and this yields an empty sequence of the same
+type as s such as below:
+>>> x = "obi"
+>>> x*-2
+''
+2. Copies made from using the * operation are shallow copies; any nested structures are not
+copied. This can result in some confusion when trying to create copies of a structure such as
+a nested list.
+>>> lists = [[]] * 3 # shallow copy
+>>> lists
+[[], [], []] # all three copies reference the same list
+>>> lists[0].append(3)
+>>> lists
+[[3], [3], [3]]
+To avoid shallow copies when dealing with nested lists, the following method can be adopted
+Objects 201 40
+```python
+>>> lists = [[] for i in range(3)]
+>>> lists[0].append(3)
+>>> lists[1].append(5)
+>>> lists[2].append(7)
+>>> lists
+[[3], [5], [7]]
+```
+3. When i or j is negative, the index is relative to the end of the string thus len(s) + i or len(s)
++ j is substituted for the negative value of i or j.
+4. Concatenating immutable sequences such as strings always results in a new object for
+example:
+>>> name = "Obi"
+>>> id(name)
+4330660336
+>>> name += "Obi" + " Ike-Nwosu"
+>>> id(name)
+4330641208
+Python defines the interfaces (thats the closest word that can be used) - Sequences and MutableSequences in the collections library and these define all the methods a type must implement to be
+considered a mutable or immutable sequence; when abstract base classes are discussed, this concept
+will become much clearer.
