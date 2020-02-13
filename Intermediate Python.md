@@ -1397,53 +1397,69 @@ print(c.imag) # 2.0
 
 ##### Неизменяемые последовательности
 
-An immutable sequence type object is one whose value cannot change once it is created. This means that the collection of objects that are directly referenced by an immutable sequence is fixed. The collection of objects referenced by an immutable sequence maybe composed of mutable objects whose value may change at runtime but the mutable object itself that is directly referenced by an immutable sequence cannot be changed. For example, a tuple is an immutable sequence but if one of the elements in the tuple is a list, a
-mutable sequence, then the list can change but the reference to the list object that tuple holds
-cannot be changed as shown below:
->>> t = [1, 2, 3], "obi", "ike"
->>> type(t)
-<class 'tuple'>
->>> t[0].append(4) # mutate the list
->>> t
-([1, 2, 3, 4], 'obi', 'ike')
->>> t[0] = [] # attempt to change the reference in tuple
-Traceback (most recent call last):
-File "<stdin>", line 1, in <module>
-TypeError: 'tuple' object does not support item assignment
-The following are built-in immutable sequence types:
-1. Strings: A string is an immutable sequence of Unicode code points or more informally an
-immutable sequence of characters. There is no char type in python so a character is just a
-string of length, 1. Strings in python can represent all unicode code points in the range U+0000
-- U+10FFFF. All text in python is Unicode and the type of the objects used to hold such text
-is str.
-2. Bytes: A bytes object is an immutable sequence of 8-bit bytes. Each bytes is represented
-by an integer in the range 0 <= x < 256. Bytes literals such as b'abc' and the built-in
-function bytes() are used to create bytes objects. Bytes object have an intimate relationship
-with strings. Strings are abstractions over text representation used in the computer; text is
-represented internally using binary or bytes. Strings are just sequences of bytes that have
-been decoded using an encoding such as UTF-8. The abstract characters of a string can also be
-encoded using available encodings such as UTF-8 to get the binary representation of the string
-in bytes objects. The relationship between bytes and stringsis illustrated with the following
-example.
->>> b = b'abc'
->>> b
-b'abc'
->>> type(b)
-<class 'bytes'>
->>> b = bytes('abc', 'utf-16') # encode a string to bytes using UTF-16 encoding
->>> b
-b'\xff\xfea\x00b\x00c\x00'
->>> b
-b'\xff\xfea\x00b\x00c\x00'
->>> b.decode("utf-8") # decoding fails as encoding has been done with utf-16
-Traceback (most recent call last):
-File "<stdin>", line 1, in <module>
-UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
->>> b.decode("utf-16") # decoding to string passes
-Objects 201 38
-'abc'
->>> type(b.decode("utf-16"))
-<class 'str'>
+Неизменяемые последовательности — это коллекции ссылки на объекты в которых не изменяются после создания. В неизменяемой последовательности может быть ссылка на изменяемый объект, в этом случае значение этого изменяемого объекта может манятся, но сама ссылка на этот изменяемый объект навсегда зафиксирована в неизменяемой последовательности.
+
+Например, кортеж (неизменяемая последовательность) содержит список (изменяемая последовательность). Можно изменять элементы входящие в список. Но нельзя поместить в кортеж ссылку на другой список.
+
+```python
+t = [1, 2, 3], "obi", "ike"
+print(type(t)) # <class 'tuple'>
+
+t[0].append(4) # изменяем список
+print(t) # ([1, 2, 3, 4], 'obi', 'ike')
+
+t[0] = [] # попытка изменить ссылку внутри кортежа
+# Traceback (most recent call last):
+#   File "test.py", line 7, in <module>
+#     t[0] = [] # попытка изменить ссылку внутри кортежа
+# TypeError: 'tuple' object does not support item assignment
+```
+
+Встроенные неизменяемые последовательсти:
+
+* Строки (Strings)
+* Байты (Bytes)
+* Кортежи (Tuples)
+
+**Strings**
+
+Строки это неизменяемая последовательность символов (точнее Unicode code points). В Python нет отдельного типа для символов, так что символ это просто строка длины 1. Строки в Python могут предствлять все Unicode code points в диапазоне `U+0000 - U+10FFFF`. Для хранения строк используется тип `str`.
+
+```python
+print(type('Hello')) # <class 'str'>
+```
+
+**Bytes**
+
+Объект типа `bytes` это неизменяемая последовательность 8-битных байт. Каждый байт представлен в виде целого числа от 0 до 255. Литерал вида `b'abc'` и встроенная функция `bytes()` используются для создания объекта Bytes. 
+
+Bytes тесно взаимодействует со строками. Строки внутри представляют собой последовательность байт декодированную с помощью кодировки (например UTF-8). Символы строк могут быть закодированы с помощью разных кодировок в разные последовательности байт.
+
+```python
+b = b'abc'
+print(b) # b'abc'
+
+print(type(b)) # <class 'bytes'>
+
+# кодирование строки в байты используя кодировку UTF-16
+b = bytes('abc', 'utf-16') 
+print(b) # b'\xff\xfea\x00b\x00c\x00'
+
+
+print(b.decode("utf-16")) # 'abc'
+print(type(b.decode("utf-16"))) # <class 'str'>
+
+# декодирование строки неудачно, 
+# так как символы закодированы в другой кодировке
+print(b.decode("utf-8")) 
+# Traceback (most recent call last):
+#   File "test.py", line 13, in <module>
+#     print(b.decode("utf-8")) 
+# UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+```
+
+**Tuple**
+
 3. Tuple: A tuple is a sequence of arbitrary python objects. Tuples of two or more items are
 formed by comma-separated lists of expressions. A tuple of one item is formed by affixing
 a comma to an expression while an empty tuple is formed by an empty pair of parentheses.
@@ -1463,6 +1479,8 @@ This is illustrated in the following example.
 ('Obi', "Ike", 1)
 >>> type(names)
 <class 'tuple'>
+
+
 4. Mutable sequences: An immutable sequence type is one whose value can change after it has
 created. There are currently two built-in mutable sequence types - byte arrays and lists
 1. Byte Arrays: Bytearray objects are mutable arrays of bytes. Byte arrays are created using
