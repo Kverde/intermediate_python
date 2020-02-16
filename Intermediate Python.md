@@ -1460,93 +1460,184 @@ print(b.decode("utf-8"))
 
 **Tuple**
 
-3. Tuple: A tuple is a sequence of arbitrary python objects. Tuples of two or more items are
-formed by comma-separated lists of expressions. A tuple of one item is formed by affixing
-a comma to an expression while an empty tuple is formed by an empty pair of parentheses.
-This is illustrated in the following example.
->>> names = "Obi", # tuple of 1
->>> names
-('Obi',)
->>> type(names)
-<class 'tuple'>
->>> names = () # tuple of 0
->>> names
-()
->>> type(names)
-<class 'tuple'>
->>> names = "Obi", "Ike", 1 # tuple of 2 or more
->>> names
-('Obi', "Ike", 1)
->>> type(names)
-<class 'tuple'>
+Кортеж это последовательность произвольных объектов. Кортеж из двух и более элементов создаётся списком выражений разделённых запятыми. Кортеж из одного элемента создаётся выражением с последующим за ним запятой. Пустой кортеж создаётся пустой парой круглых скобок.
 
-
-4. Mutable sequences: An immutable sequence type is one whose value can change after it has
-created. There are currently two built-in mutable sequence types - byte arrays and lists
-1. Byte Arrays: Bytearray objects are mutable arrays of bytes. Byte arrays are created using
-the built-in bytearray() constructor. Apart from being mutable and thus unhashable,
-byte arrays provide the same interface and functionality as immutable byte objects.
-Bytearrays are very useful when the efficiency offered by their mutability is required.
-For example, when receiving an unknown amount of data over a network, byte arrays
-are more efficient because the array can be extended as more data is received without
-having to allocate new objects as would be the case if the immutable byte type was used.
-2. Lists: Lists are a sequence of arbitrary Python objects. Lists are formed by placing a
-comma-separated list of expressions in square brackets. The empty list is formed with
-the empty square bracket, []. A list can be created from any iterable by passing such
-iterable to the list method. The list data structure is one of the most widely used data
-type in python.
-Sequence types have some operations that are common to all sequence types. These are described
-in the following table; x is an object, s and t are sequences and n, i, j, k are integers.
-Objects 201 39
-Operation Result
-x in s True if an item of s is equal to x, else False
-x not in s False if an item of s is equal to x, else True
-s + t the concatenation of s and t
-s * n or n * s n shallow copies of s concatenated
-s[i] ith item of s, origin 0
-s[i:j] slice of s from i to j
-s[i:j:k] slice of s from i to j with step k
-len(s) length of s
-min(s) smallest item of s
-max(s) largest item of s
-s.index(x[, i[, j]]) index of the first occurrence of x in s (at or after index i and
-before index j)
-s.count(x) total number of occurrences of x in s
-Note
-1. Values of n that are less than 0 are treated as 0 and this yields an empty sequence of the same
-type as s such as below:
->>> x = "obi"
->>> x*-2
-''
-2. Copies made from using the * operation are shallow copies; any nested structures are not
-copied. This can result in some confusion when trying to create copies of a structure such as
-a nested list.
->>> lists = [[]] * 3 # shallow copy
->>> lists
-[[], [], []] # all three copies reference the same list
->>> lists[0].append(3)
->>> lists
-[[3], [3], [3]]
-To avoid shallow copies when dealing with nested lists, the following method can be adopted
-Objects 201 40
 ```python
->>> lists = [[] for i in range(3)]
->>> lists[0].append(3)
->>> lists[1].append(5)
->>> lists[2].append(7)
->>> lists
-[[3], [5], [7]]
+names = "Obi",
+print(names) # ('Obi',)
+print(type(names)) # <class 'tuple'>
+
+names = () # tuple of 0
+print(names)  # ()
+print(type(names))  # <class 'tuple'>
+
+names = "Obi", "Ike", 1 # tuple of 2 or more
+print(names)  # ('Obi', "Ike", 1)
+print(type(names))  # <class 'tuple'>
 ```
-3. When i or j is negative, the index is relative to the end of the string thus len(s) + i or len(s)
-+ j is substituted for the negative value of i or j.
-4. Concatenating immutable sequences such as strings always results in a new object for
-example:
->>> name = "Obi"
->>> id(name)
-4330660336
->>> name += "Obi" + " Ike-Nwosu"
->>> id(name)
-4330641208
-Python defines the interfaces (thats the closest word that can be used) - Sequences and MutableSequences in the collections library and these define all the methods a type must implement to be
-considered a mutable or immutable sequence; when abstract base classes are discussed, this concept
-will become much clearer.
+
+##### Изменяемые последовательности
+
+Значения внутри изменяемых последовательностей могут менятся после создания объекта. Существует два встроенных типа изменяемых последовательностей: массив байт и список.
+
+**Byte Arrays**
+
+Объект `bytearray` это изменяемый массив байт. Он создайтся встроенной функцией `butearray()`.  Кроме того что `bytearray` изменяемый и следовательно нехешируемый он поддерживает тот же интерфейс и функциональность что и неизменяемый `bytes`.  Массив байт наиболее полезен когда требуется эффективность обеспечиваемая его изменяемостью. Например, при приёме неизвестного количество данных по сети, `bytearra` более эффективен так как может быть расширен при приёме новых данных без создания нового объекта как было бы с неизменяемый `bytes`.
+
+**List**
+
+Список это произвольная последовательность объектов Python, это самый широко используемый тип данных в Python. Списки создаётся выражениями разделёнными запятыми в квадратных скобках. Пустой список создаётся парой пустых квадратных скобок. Список может быть создан из любого перечисляемого типа, помещением его в метод `list()`. 
+
+##### Операции с последовательностями
+
+Типы последовательностей поддерживают общий набор операций. Эти операции описаны в таблице ниже.
+
+* x — объект
+* s, t — последовательности
+* n, i, j, k — целые числа
+
+
+
+| Операция | Описание |
+| -------- | -------- |
+| x **in** s | **True** если `s` содержит элемент равный `x`, **False** если не содержит |
+| x **not in** s | **False** если `s` содержит элемент равный `x`, **True** если не содержит |
+| s + t | Соединение последовательностей `s` и `t` |
+| s * n | `n` поверхностных копий `s` соединённых в одну последовательность |
+| s[i] | i-тый элемент `s`, стартовый — 0 |
+| s[i:j] | Срез элементов начиная с `i` (включительно) и заканчивая `j` (не включительно) |
+| s[i:j:k] | Срез элементов начиная с `i` (включительно) и заканчивая `j` (не включительно) с шагом `k` |
+| len(s) | Длина `s` |
+| min(s) | Наименьший элемент из `s` |
+| max(s) | Наибольший элемент из `s` |
+| s.index(x) | Индекс первого появления элемента `x` в `s` |
+| s.count(x) | Количество вхождений `x` в `s` |
+
+**Примечание**
+
+Значения `n` равные или меньшие 0 производят пустую последовательность того же типа:
+
+```python
+x = "obi"
+s = x*-2
+print(s) # ''
+print(type(s)) # <class 'str'>
+```
+
+Оператора `*` осуществляет поверхностное копирование: вложенные структуры не копируются. Это может привести к проблемам, например при попытке копирования вложенного списка:
+
+```python
+lists = [[]] * 3 # поверхностное копирование
+print(lists) # [[], [], []] все три копии ссылаются на один лист
+
+lists[0].append(3)
+print(lists) # [[3], [3], [3]]
+```
+
+Список списков можно сделать другим методом:
+
+```python
+lists = [[] for i in range(3)]
+lists[0].append(3)
+lists[1].append(5)
+lists[2].append(7)
+
+print(lists) # [[3], [5], [7]]
+```
+
+При отрицательном индексе `i` отчёт начинается с конца строки: будет возвращён элемент под индексом `len(s) + i`:
+
+```python
+a = ['a', 'b', 'c', 'd']
+
+print(a[-3]) # b
+print(a[1])  # b
+```
+
+Соединение неизменяемых последовательностей, таких как строки, всегда возвращает новый объект:
+
+```python
+name = "Obi"
+print(id(name)) # 19428608
+
+name += "Obi" + " Ike-Nwosu"
+print(id(name)) # 19375168
+```
+
+Python определяет интерфейсы (это самое близкое слово которое мы можем использовать) `Sequences` и `MutableSequences` в библиотеке `collections`. Они определяют все методы которые должны реализовывать изменяемые и неизменяемые последовательности. При разговоре об абстрактных классах, мы рассмотрим эту концепцию детальнее.
+
+##### Множество
+
+Множества это неупорядоченные, конечные коллекции уникальных объектов. Множества неупорядочены, поэтому не могут быть проиндексированы целыми числами. Элементы множества должны быть хешируемы, а следовательно неизменяемы. Хеширование элементов обязательно так как множества в Python реализуются через хеш-таблицы.
+
+Множества Python поддерживают эффективную проверку наличия объекта во множестве, вычисления пересечений, объединений и разности множеств. Элементы множества можно перебирать и функция `len()` возвращает количество элементов множества. Существует два типа множеств: изменяемые (`set`)  и неизменяемые (`frozenset`). Общие методы множеств представлены в следующей таблице:
+
+| Метод             | Описание                                                     |
+| ----------------- | ------------------------------------------------------------ |
+| len(s)            | Возвращает мощность множества                                |
+| x **in** s        | Проверяет является ли `x` элементом `s`                      |
+| x **not in** s    | Проверяет что `x` не является элементом `s`                  |
+| isdisjoint(other) | Возвращает **True** если множества не имеют общих элементов. Множества являются непересекающимися (disjoint) тогда и только тогда когда их пересечение равно пустому множеству. |
+|                   |                                                              |
+|                   |                                                              |
+|                   |                                                              |
+|                   |                                                              |
+|                   |                                                              |
+|                   |                                                              |
+|                   |                                                              |
+|                   |                                                              |
+|                   |                                                              |
+
+issubset(other), set <= other Test whether every element in the set is
+in other.
+set < other Test whether the set is a proper subset of
+other, that is, set <= other and set ! other.
+issuperset(other), set >= other Test whether every element in other is in
+the set.
+set > other Test whether the set is a proper superset
+of other, that is, set >= other and set !=
+other.
+union(other, …), set | other | … Return a new set with elements from the
+set and all others.
+intersection(other, …), set & other & … Return a new set with elements common
+to the set and all others.
+difference(other, …), set - other - … Return a new set with elements in the set
+that are not in the others.
+symmetric_difference(other), set ˆ other Return a new set with elements in either
+the set or other but not both.
+copy() Return a new set with a shallow copy of
+s.
+
+1. Frozen set: This represents an immutable set. A frozen set is created by the built-in frozenset()
+constructor. A frozenset is immutable and thus hashable so it can be used as an element of
+another set, or as a dictionary key.
+2. Set: This represents a mutable set and it is created using the built-in set() constructor. The
+mutable set is not hashable and cannot be part of another set. A set can also be created using
+the set literal {}. Methods unique to the mutable set include:
+Method Description
+update(other, …), set |= other | … Update the set, adding elements from all
+others.
+intersection_update(other, …), set &=
+other & …
+Update the set, keeping only elements
+found in it and all others.
+difference_update(other, …), set -= other
+| …
+Update the set, removing elements
+found in others.
+symmetric_difference_update(other), set
+ˆ= other
+Update the set, keeping only elements
+found in either set, but not in both.
+add(elem) Add element elem to the set.
+Objects 201 42
+Method Description
+remove(elem) Remove element elem from the set.
+Raises KeyError if elem is not contained
+in the set.
+discard(elem) Remove element elem from the set if it
+is present.
+pop() Remove and return an arbitrary element
+from the set. Raises KeyError if the set is
+empty.
+clear() Remove all elements from the set.
