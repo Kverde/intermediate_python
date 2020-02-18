@@ -1572,39 +1572,28 @@ Python определяет интерфейсы (это самое близко
 
 Множества Python поддерживают эффективную проверку наличия объекта во множестве, вычисления пересечений, объединений и разности множеств. Элементы множества можно перебирать и функция `len()` возвращает количество элементов множества. Существует два типа множеств: изменяемые (`set`)  и неизменяемые (`frozenset`). Общие методы множеств представлены в следующей таблице:
 
-| Метод             | Описание                                                     |
-| ----------------- | ------------------------------------------------------------ |
-| len(s)            | Возвращает мощность множества                                |
-| x **in** s        | Проверяет является ли `x` элементом `s`                      |
-| x **not in** s    | Проверяет что `x` не является элементом `s`                  |
-| isdisjoint(other) | Возвращает **True** если множества не имеют общих элементов. Множества являются непересекающимися (disjoint) тогда и только тогда когда их пересечение равно пустому множеству. |
-|                   |                                                              |
-|                   |                                                              |
-|                   |                                                              |
-|                   |                                                              |
-|                   |                                                              |
-|                   |                                                              |
-|                   |                                                              |
-|                   |                                                              |
-|                   |                                                              |
+| Метод                                   | Описание                                                     |
+| --------------------------------------- | ------------------------------------------------------------ |
+| len(s)                                  | Возвращает мощность множества                                |
+| x **in** s                              | Проверяет является ли `x` элементом `s`                      |
+| x **not in** s                          | Проверяет что `x` не является элементом `s`                  |
+| isdisjoint(other)                       | Возвращает **True** если множества не имеют общих элементов. Множества являются непересекающимися (disjoint) тогда и только тогда когда их пересечение равно пустому множеству. |
+| issubset(other),  set <= other          | Проверяет что каждый элемент из множества есть в другом множестве. |
+| set < other                             | Проверяет что множество является строгим подмножеством другого множества (`set <= other` и `set != other`). |
+| ssuperset(other), set >= other          | Проверяет что каждый элемент в другом множестве есть в текущем множестве. |
+| set > other                             | Проверяет что другое множество является строгим подмножеством текущего множества (`set >= other` и `set != other`). |
+| union(other, …), set \| other …         | Возвращает новое множество — объединение текущего и указанных множеств. |
+| intersection(other, …), set & other & … | Возвращает новое множество — пересечение текущего и указанных множеств. |
+|                                         |                                                              |
+|                                         |                                                              |
+|                                         |                                                              |
 
-issubset(other), set <= other Test whether every element in the set is
-in other.
-set < other Test whether the set is a proper subset of
-other, that is, set <= other and set ! other.
-issuperset(other), set >= other Test whether every element in other is in
-the set.
-set > other Test whether the set is a proper superset
-of other, that is, set >= other and set !=
-other.
-union(other, …), set | other | … Return a new set with elements from the
-set and all others.
-intersection(other, …), set & other & … Return a new set with elements common
-to the set and all others.
 difference(other, …), set - other - … Return a new set with elements in the set
 that are not in the others.
+
 symmetric_difference(other), set ˆ other Return a new set with elements in either
 the set or other but not both.
+
 copy() Return a new set with a shallow copy of
 s.
 
