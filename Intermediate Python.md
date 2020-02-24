@@ -2108,3 +2108,384 @@ print(Account.inquiry(x)) # 10
 ```
 
 Далее в этой главе будут описаны дескрипторы и алгоритм ссылок на атрибуты, которые позволят лучше понять эту трансформацию. 
+
+### 6.2 Настройка пользовательских типов
+
+Python is a very flexible language providing user with the ability to customize classes in ways that are unimaginable in other languages. Attribute access, class creation and object initialization are a few examples of ways in which classes can be customized. User defined types can also be customized to behave like built-in types and support special operators and syntax such as *, +, -, [] etc.
+
+
+All these customization is possible because of methods that are called special or magic methods.
+Python special methods are just ordinary python methods with double underscores as prefix and
+suffix to the method names. Special methods have already encountered in this book. An example is
+the __init__ method that is called to initialize class instances; another is the __getitem__ method
+invoked by the index, [] operator; an index such as a[i] is translated by the interpreter to a call
+to type(a).__getitem__(a, i). Methods with the double underscore as prefix and suffix are just
+ordinary python methods; users can define their own class methods with method names prefixed
+and suffixed with the double underscore and use it just like normal python methods. This is however
+not the conventional approach to defining normal user methods.
+User defined classes can also implement these special methods; a corollary of this is that built-in
+operators such as + or [] can be adapted for use by user defined classes. This is one of the essence of
+polymorphism in Python. In this book, special methods are grouped according to the functions they
+serve. These groups include:
+Special methods for instance creation
+The __new__ and __init__ special methods are the two methods that are integral to instance
+creation. New class instances are created in a two step process; first the static method, __new__, is
+called to create and return a new class instance then the __init__ method is called to to initialize the
+newly created object with supplied arguments. A very important instance in which there is a need
+to override the __new__ method is when sub-classing built-in immutable types. Any initialization
+that is done in the sub-class must be done before object creation. This is because once an immutable
+object is created, its value cannot be changed so it makes no sense trying to carry out any function
+that modifies the created object in an __init__ method. An example of sub-classing is shown in the
+following snippet in which whatever value is supplied is rounded up to the next integer.
+Object Oriented Programming 56
+>>> import math
+>>> class NextInteger(int):
+... def __new__(cls, val):
+... return int.__new__(cls, math.ceil(val))
+...
+>>> NextInteger(2.2)
+3
+>>>
+Attempting to do the math.ceil operation in an __init__ method will cause the object initialization
+to fail. The __new__ method can also be overridden to create a Singleton super class; subclasses of
+this class can only ever have a single instance throughout the execution of a program; the following
+example illustrates this.
+class Singleton:
+def __new__(cls, *args, **kwds):
+it = cls.__dict__.get("__it__")
+if it is None:
+return it
+cls.__it__ = it = object.__new__(cls)
+it.init(*args, **kwds)
+return it
+def __init__(self, *args, **kwsds):
+pass
+It is worth noting that when implementing the __new__ method, the implementation must call its
+base class’ __new__ and the implementation method must return an object.
+Users are already familiar with defining the __init__ method; the __init__ method is overridden
+to perform attribute initialization for an instance of a mutable types.
+Special methods for attribute access
+The special methods in this category provide means for customizing attribute references; this maybe
+in order to access or set such an attribute. This set of special methods available for this include:
+1. __getattr__: This method can be implemented to handle situations in which a referenced
+attribute cannot be found. This method is only called when an attribute that is referenced is
+neither an instance attribute nor is it found in the class tree of that object. This method should
+return some value for the attribute or raise an AttributeError exception. For example, if x
+is an instance of the Account class defined above, trying to access an attribute that does not
+exist will result in a call to this method as shown in the following snippet
+Object Oriented Programming 57
+class Account(object):
+num_accounts = 0
+def __init__(self, name, balance):
+self.name = name
+self.balance = balance
+Account.num_accounts += 1
+def del_account(self):
+Account.num_accounts -= 1
+def __getattr__(self, name):
+return "Hey I don't see any attribute called {}".format(name)
+def deposit(self, amt):
+self.balance = self.balance + amt
+def withdraw(self, amt):
+self.balance = self.balance - amt
+def inquiry(self):
+return "Name={}, balance={}".format(self.name, self.balance)
+>>> x = Account('obi', 0)
+>>> x.balaance
+Hey I dont see any attribute called balaance
+Care should be taken with the implementation of __getattr__ because if the implementation
+references an instance attribute that does not exist, an infinite loop may occur because the
+__getattr__ method is called successively without end.
+class Account(object):
+num_accounts = 0
+def __init__(self, name, balance):
+self.name = name
+self.balance = balance
+Account.num_accounts += 1
+def del_account(self):
+Account.num_accounts -= 1
+def __getattr__(self, name):
+return self.namee # trying to acess a variable that doesnt exist will result in __getatt\
+r___ calling itself over and over again
+def deposit(self, amt):
+self.balance = self.balance + amt
+def withdraw(self, amt):
+Object Oriented Programming 58
+self.balance = self.balance - amt
+def inquiry(self):
+return "Name={}, balance={}".format(self.name, self.balance)
+>>> x = Account('obi', 0)
+>>> x.balaance # this will result in a RuntimeError: maximum recursion depth exceeded while call\
+ing a Python object exception
+1. __getattribute__: This method is implemented to customize the attribute access for a class.
+This method is always called unconditionally during attribute access for instances of a class.
+2. __setattr__: This method is implemented to unconditionally handle all attribute assignment.
+__setattr__ should insert the value being assigned into the dictionary of the instance
+attributes rather than using self.name=value which results in an infinite recursive call. When
+__setattr__() is used for instance attribute assignment, the base class method with the same
+name should be called such as super().__setattr__(self, name, value).
+3. __delattr__: This is implemented to customize the process of deleting an instance of a class.
+it is invoked whenever del obj is called.
+4. __dir__: This is implemented to customize the list of object attributes returned by a call to
+dir(obj).
+Special methods for Type Emulation
+Built-in types in python have special operators that work with them. For example, numeric types
+support the + operator for adding two numbers, numeric types also support the - operator for
+subtracting two numbers, sequence and mapping types support the [] operator for indexing values
+held. Sequence types even also have support for the + operator for concatenating such sequences.
+User defined classes can be customized to behave like these built-in types where it makes sense.
+This can be done by implementing the special methods that are invoked by the interpreter when
+these special operators are encountered. The special methods that provide these functionalities for
+emulating built-in types can be broadly grouped into one of the following:
+Numeric Type Special Methods
+The following table shows some of the basic operators and the special methods invoked when these
+operators are encountered.
+Object Oriented Programming 59
+Special Method Operator Description
+a.__add__(self, b) binary addition, a + b
+a.__sub__(self, b) binary subtraction, a - b
+a.__mul__(self, b) binary multiplication, a * b
+a.__truediv__(self, b) division of a by b
+a.__floordiv__(self, b) truncating division of a by b
+a.__mod__(self, b) a modulo b
+a.__divmod__(self, b) returns a divided by b, a modulo b
+a.__pow__(self, b[, modulo]) a raised to the bth power
+Python has the concept of reflected operations; this was covered in the section on the NotImplemented of previous chapter. The idea behind this concept is that if the left operand of a binary
+arithmetic operation does not support a required operation and returns NotImplemented then an
+attempt is made to call the corresponding reflected operation on the right operand provided the
+type of both operands differ. An example of this rarely used functionality is shown in the following
+trivial example for emphasis.
+class MyNumber(object):
+def __init__(self, x):
+self.x = x
+def __str__(self):
+return str(self.x)
+>>> 10 - MyNumber(9) # int type, 10, does not know how to subtract MyNumber type and MyNumbe\
+r does not know how to handle the operation too
+Traceback (most recent call last):
+File "<stdin>", line 1, in <module>
+TypeError: unsupported operand type(s) for -: 'int' and 'MyNumber'
+In the next snippet the class implements the reflected special method and this reflected method is
+called by the interpreter.
+class MyFixedNumber(MyNumber):
+def __rsub__(self, other): # reflected operation implemented
+return MyNumber(other - self.val)
+>>> (10 - MyFixedNumber(9)).val
+1
+The following special methods implement reflected binary arithmetic operations.
+Object Oriented Programming 60
+Special Method Operator Description
+a.__radd__(self, b) reflected binary addition, a + b
+a.__rsub__(self, b) reflected binary subtraction, a - b
+a.__rmul__(self, b) reflected binary multiplication, a * b
+a.__rtruediv__(self, b) reflected division of a by b
+a.__rfloordiv__(self, b) reflected truncating division of a by b
+a.__rmod__(self, b) reflected a modulo b
+a.__rdivmod__(self, b) reflected a divided by b, a modulo b
+a.__rpow__(self, b[, modulo]) reflected a raised to the bth power
+Another set of operators that work with numeric types are the augmented assignment operators.
+An example of an augmented operation is shown in the following code snippet.
+>>> val = 10
+>>> val += 90
+>>> val
+100
+>>>
+A few of the special methods for implementing augmented arithmetic operations are listed in the
+following table.
+Special Method Description
+a.__iadd__(self, b) a += b
+a.__isub__(self, b) a -= b
+a.__imul__(self, b) a *= b
+a.__itruediv__(self, b) a //= b
+a.__ifloordiv__(self, b) a /= b
+a.__imod__(self, b) a %= b
+a.__ipow__(self, b[, modulo]) a **= b
+Sequence and Mapping Types Special Methods
+Sequence and mapping are often referred to as container types because they can hold references to
+other objects. User-defined classes can emulate container types to the extent that this makes sense
+if such classes implement the special methods listed in the following table.
+Special Method Description
+__len__(obj) returns length of obj. This is invoked to
+implement the built-in function len(). An
+object that doesn’t define a __bool__() method
+and whose __len__() method returns zero is
+considered to be false in a Boolean context.
+Object Oriented Programming 61
+Special Method Description
+__getitem__(obj, key) fetches item, obj[key]. For sequence types, the
+keys should be integers or slice objects. If key is
+of an inappropriate type, TypeError may be
+raised; if the key has a value outside the set of
+indices for the sequence, IndexError should be
+raised. For mapping types, if key is absent from
+the container, KeyError should be raised.
+__setitem__(obj, key, value) Sets obj[key] = value
+__delitem__(obj, key) deletes obj[key]. Invoked by del obj[key]
+__contains__(obj, key) Returns true if key is contained in obj and false
+otherwise. Invoked by a call to key in obj
+__iter__(self) This method is called when an iterator is
+required for a container. This method should
+return a new iterator object that can iterate over
+all the objects in the container. For mappings, it
+should iterate over the keys of the container.
+Iterator objects also need to implement this
+method; they are required to return themselves.
+This is also used by the for..in construct.
+Sequence types such as lists support the addition (for concatenating lists) and multiplication
+operators (for creating copies), + and * respectively, by defining the methods __add__(), __radd_-
+_(), __iadd__(), __mul__(), __rmul__() and __imul__(). Sequence types also implement the
+__reversed__ method that implements the reversed() method that is used for reverse iteration
+over a sequence. User defined classes can implement these special methods to get the required
+functionality.
+Emulating Callable Types
+Callable types support the function call syntax, (args). Classes that implement the __call__(self[,
+args...]) method are callable. User defined classes for which this functionality makes sense can
+implement this method to make class instances callable. The following example shows a class
+implementing the __call__(self[, args...]) method and how instances of this class can be called
+using the function call syntax.
+Object Oriented Programming 62
+class Account(object):
+num_accounts = 0
+def __init__(self, name, balance):
+self.name = name
+self.balance = balance
+Account.num_accounts += 1
+def __call__(self, arg):
+return "I was called with \'{}\'".format(arg)
+def del_account(self):
+Account.num_accounts -= 1
+def deposit(self, amt):
+self.balance = self.balance + amt
+def withdraw(self, amt):
+self.balance = self.balance - amt
+def inquiry(self):
+return self.balance
+>>> acct = Account()
+>>> acct("Testing function call on instance object")
+I was called with 'Testing function call on instance object'
+Special Methods for comparing objects
+User-defined classes can provide custom implementation for the special methods invoked by the
+five object comparison operators in python, <, >, >=, <=, = in order to control how these operators
+work. These special methods are given in the following table.
+Special Method Description
+a.__lt__(self, b) a < b
+a.__le__(self, b) a <= b
+a.__eq__(self, b) a == b
+a.__ne__(self, b) a != b
+a.__gt__(self, b) a > b
+a.__ge__(self, b) a >= b
+In Python, x==y is True does not imply that x!=y is False so __eq__() should be defined along
+with __ne__() so that the operators are well behaved. __lt__() and __gt__(), and __le__() and
+__ge__() are each other’s reflection while __eq__() and __ne__() are their own reflection; this
+means that if a call to the implementation of any of these methods on the left argument returns
+NotImplemented, the reflected operator is is used.
+Object Oriented Programming 63
+Special Methods and Attributes for Miscellaneous Customizations
+1. __slots__: This is a special attribute rather than a method. It is an optimization trick that
+is used by the interpreter to efficiently store object attributes. Objects by default store all
+attributes in a dictionary (the __dict__ attribute) and this is very inefficient when objects
+with few attributes are created in large numbers. __slots__ make use of a static iterable that
+reserves just enough space for each attribute rather than the dynamic __dict__ attribute. The
+iterable representing the __slot__ variable can also be a string made up of the attribute names.
+The following example shows how __slots__ works.
+class Account:
+"""base class for representing user accounts"""
+# we can also use __slots__ = "name balance"
+__slots__ = ['name', 'balance']
+num_accounts = 0
+def __init__(self, name, balance):
+self.name = name
+self.balance = balance
+Account.num_accounts += 1
+def del_account(self):
+Account.num_accounts -= 1
+def __getattr__(self, name):
+"""handle attribute reference for non-existent attribute"""
+return "Hey I dont see any attribute called {}".format(name)
+def deposit(self, amt):
+self.balance = self.balance + amt
+def withdraw(self, amt):
+self.balance = self.balance - amt
+def inquiry(self):
+return "Name={}, balance={}".format(self.name, self.balance)
+>>>acct = Account("obi", 10)
+>>>acct.__dict__ # __dict__ attribute is gone
+Hey I dont see any attribute called __dict__
+>>>acct.x = 10
+Traceback (most recent call last):
+File "acct.py", line 32, in <module>
+acct.x = 10
+AttributeError: 'Account' object has no attribute 'x'
+>>>acct.__slots__
+['name', 'balance']
+Object Oriented Programming 64
+A few things that are worth noting about __slots__ include the following:
+1. If a superclass has the __dict__ attribute then using __slots__ in sub-classes is of no use as
+the dictionary is available.
+2. If __slots__ are used then attempting to assign to a variable not in the __slots__ variable
+will result in an AttributeError as shown in the previous example.
+3. Sub-classes will have a __dict__ even if they inherit from a base class with a __slots__-
+declaration; subclasses have to define their own __slots__ attribute which must contain only
+the additional names in order to avoid having the __dict__ for storing names.
+4. Subclasses with “variable-length” built-in types as base class cannot have a non-empty __-
+slots__ variable.
+5. __bool__: This method implements the truth value testing for a given class; it is invoked by
+the built-in operation bool() and should return a True or False value. In the absence of an
+implementation, __len__() is called and if __len__ is implemented, the object’s truth value
+is considered to be True if result of the call to __len__ is non-zero. If neither __len__() nor
+__bool__() are defined by a class then all its instances are considered to be True.
+6. __repr__ and __str__: These are two closely related methods as they both return string
+representations for a given object and only differ subtly in the intent behind their creation.
+Both are invoked by a call to repr and str methods respectively. The __repr__ method
+implementation should return an unambiguous string representation of the object it is
+being called on. Ideally, the representation that is returned should be an expression that
+when evaluated by the eval method returns the given object; when this is not possible
+the representation returned should be as unambiguous as possible. On the other hand,
+__str__ exists to provide a human readable version of an object; a version that would make
+sense to some one reading the output but that doesn’t necessarily understand the semantics of
+the language. A very good illustration of how both methods differ is shown below by calling
+both methods on a data object.
+>>> import datetime
+>>> today = datetime.datetime.now()
+>>> str(today)
+'2015-07-05 20:55:58.642018' # human readable version of datetime object
+>>> repr(today)
+'datetime.datetime(2015, 7, 5, 20, 55, 58, 642018)' # eval will return the datetime object
+When using string interpolation, %r makes a call to repr while %s makes a call to str.
+7. __bytes__: This is invoked by a call to the bytes() built-in and it should return a byte string
+representation for an object. The byte string should be a bytes object.
+8. __hash__: This is invoked by the hash() built-in. It is also used by operations that work on
+types such as set, frozenset, and dict that make use of object hash values. Providing __-
+hash__ implementation for user defined classes is an involved and delicate act that should be
+carried out with care as will be seen. Immutable built-in types are hashable while mutable
+types such as lists are not. For example, the hash of a number is the value of the number as
+shown in the following snippet.
+Object Oriented Programming 65
+>>> hash(1)
+1
+>>> hash(12345)
+12345
+>>>
+User defined classes have a default hash value that is derived from their id() value. Any __hash__()
+implementation must return an integer and objects that are equal by comparison must have the
+same hash value so for two object, a and b, (a==b and hash(a)==hash(b)) must be true. A few
+rules for implementing a __hash__() method include the following: 1. A class should only define
+the __hash__() method if it also defines the __eq__() method.
+1. The absence of an implementation for the __hash__() method in a class renders its instances
+unhashable.
+2. The interpreter provides user-defined classes with default implementations for __eq__() and
+__hash__(). By default, all objects compare unequal except with themselves and x.__hash_-
+_() returns a value such that (x == y and x is y and hash(x) == hash(y)) is always true.
+In CPython, the default __hash__() implementation returns a value derived from the id() of
+the object.
+3. Overriding the __eq__() method without defining the __hash__() method sets the __-
+hash__() method to None in the class. When the __hash__() method of a class is None, an
+instance of the class will raise an appropriate TypeError when an attempt is made to retrieve
+its hash value. The object will also be correctly identified as unhashable when checking
+isinstance(obj, collections.Hashable).
+4. If a class overrides the __eq__() and needs to keep the implementation of __hash__() from
+a base class, this must be done explicitly by setting __hash__ = BaseClass.__hash__.
+5. A class that does not override the __eq__() can suppress hash support by setting __hash__ to
+None. If a class defines its own __hash__() method that explicitly raises a TypeError,
+instances of such class will be incorrectly identified as hashable by an isinstance(obj,
+collections.Hashable) test.
