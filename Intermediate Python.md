@@ -2111,45 +2111,34 @@ print(Account.inquiry(x)) # 10
 
 ### 6.2 Настройка пользовательских типов
 
-Python is a very flexible language providing user with the ability to customize classes in ways that are unimaginable in other languages. Attribute access, class creation and object initialization are a few examples of ways in which classes can be customized. User defined types can also be customized to behave like built-in types and support special operators and syntax such as *, +, -, [] etc.
+Python предоставляет широкие возможности настройки классов: доступ к атрибутам, создание классов, инициализация объектов и другие. Классы созданные пользователем могут обладать поведением похожим на встроенные типы и поддерживать операции `+`, `-`, `*`, `[]` и др.
+
+Настройка классов возможна благодаря методам называемым магическими меодами (magic methods) — это обычные методы Python имя кторых начинается и заканчивается двойным подчёркиванием (`__`). Например, метод `__init__` вызываемый при инициализации экземпляра класса, или метод `__getitem__` вызываемый оператором `[]`: индекс `a[i]` преобразуется интерпритатором в вызов `type(a).__getitem__(a, i)`. Синтаксически всё это обычные методы, их можно объявлять стандартным образом в своих классах.
+
+Рассмотрим магические меттоды.
+
+#### Специальные методы для создания обектов
+
+Методы `__new__` и `__init__` вызываются при создании объектов. Ноый объект создаётся два этапа: первым вызывается статическим метод `__new__`возвращающи новый объект и затем вызывается метод `__init__` для инициализации созданного объекта переданными агрументыми.
+
+Особый случай когда нужно необходимо переопределять метод `__new__` это наследование встроенных неизменяемых типов. Любая инициализация в наследниках должна проходить до создания класса, так как значение неизменяемых классов не меняется после создания. Последующие изменения объекта, в том числе в методе `__init__`, не влияет на объект. Пример создания класса цеых чисел которые округляет указанное значение до следущего целого:
+
+```python
+import math
 
 
-All these customization is possible because of methods that are called special or magic methods.
-Python special methods are just ordinary python methods with double underscores as prefix and
-suffix to the method names. Special methods have already encountered in this book. An example is
-the __init__ method that is called to initialize class instances; another is the __getitem__ method
-invoked by the index, [] operator; an index such as a[i] is translated by the interpreter to a call
-to type(a).__getitem__(a, i). Methods with the double underscore as prefix and suffix are just
-ordinary python methods; users can define their own class methods with method names prefixed
-and suffixed with the double underscore and use it just like normal python methods. This is however
-not the conventional approach to defining normal user methods.
-User defined classes can also implement these special methods; a corollary of this is that built-in
-operators such as + or [] can be adapted for use by user defined classes. This is one of the essence of
-polymorphism in Python. In this book, special methods are grouped according to the functions they
-serve. These groups include:
-Special methods for instance creation
-The __new__ and __init__ special methods are the two methods that are integral to instance
-creation. New class instances are created in a two step process; first the static method, __new__, is
-called to create and return a new class instance then the __init__ method is called to to initialize the
-newly created object with supplied arguments. A very important instance in which there is a need
-to override the __new__ method is when sub-classing built-in immutable types. Any initialization
-that is done in the sub-class must be done before object creation. This is because once an immutable
-object is created, its value cannot be changed so it makes no sense trying to carry out any function
-that modifies the created object in an __init__ method. An example of sub-classing is shown in the
-following snippet in which whatever value is supplied is rounded up to the next integer.
-Object Oriented Programming 56
->>> import math
->>> class NextInteger(int):
-... def __new__(cls, val):
-... return int.__new__(cls, math.ceil(val))
-...
->>> NextInteger(2.2)
-3
->>>
-Attempting to do the math.ceil operation in an __init__ method will cause the object initialization
-to fail. The __new__ method can also be overridden to create a Singleton super class; subclasses of
-this class can only ever have a single instance throughout the execution of a program; the following
-example illustrates this.
+class NextInteger(int):
+
+     def __new__(cls, val):
+         return int.__new__(cls, math.ceil(val))
+
+
+print(NextInteger(2.2)) # 3
+```
+
+Attempting to do the math.ceil operation in an __init__ method will cause the object initialization to fail. The __new__ method can also be overridden to create a Singleton super class; subclasses of this class can only ever have a single instance throughout the execution of a program; the following example illustrates this.
+
+```python
 class Singleton:
 def __new__(cls, *args, **kwds):
 it = cls.__dict__.get("__it__")
@@ -2160,10 +2149,15 @@ it.init(*args, **kwds)
 return it
 def __init__(self, *args, **kwsds):
 pass
+```
+
 It is worth noting that when implementing the __new__ method, the implementation must call its
 base class’ __new__ and the implementation method must return an object.
 Users are already familiar with defining the __init__ method; the __init__ method is overridden
 to perform attribute initialization for an instance of a mutable types.
+
+
+#### 
 Special methods for attribute access
 The special methods in this category provide means for customizing attribute references; this maybe
 in order to access or set such an attribute. This set of special methods available for this include:
