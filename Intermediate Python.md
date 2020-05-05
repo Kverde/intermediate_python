@@ -2107,21 +2107,21 @@ x.deposit(10)
 print(Account.inquiry(x)) # 10
 ```
 
-Далее в этой главе будут описаны дескрипторы и алгоритм ссылок на атрибуты, которые позволят лучше понять эту трансформацию. 
+Далее в этой главе будут описаны дескрипторы и алгоритм ссылок на атрибуты, которые позволят лучше понять эту трансформацию.
 
 ### 6.2 Настройка пользовательских типов
 
 Python предоставляет широкие возможности настройки классов: доступ к атрибутам, создание классов, инициализация объектов и другие. Классы созданные пользователем могут обладать поведением похожим на встроенные типы и поддерживать операции `+`, `-`, `*`, `[]` и др.
 
-Настройка классов возможна благодаря методам называемым магическими меодами (magic methods) — это обычные методы Python имя кторых начинается и заканчивается двойным подчёркиванием (`__`). Например, метод `__init__` вызываемый при инициализации экземпляра класса, или метод `__getitem__` вызываемый оператором `[]`: индекс `a[i]` преобразуется интерпритатором в вызов `type(a).__getitem__(a, i)`. Синтаксически всё это обычные методы, их можно объявлять стандартным образом в своих классах.
+Настройка классов возможна благодаря методам называемым магическими методами (magic methods) — это обычные методы Python имя которых начинается и заканчивается двойным подчёркиванием (`__`). Например, метод `__init__` вызываемый при инициализации экземпляра класса, или метод `__getitem__` вызываемый оператором `[]`: индекс `a[i]` преобразуется интерпретатором в вызов `type(a).__getitem__(a, i)`. Синтаксически всё это обычные методы, их можно объявлять стандартным образом в своих классах.
 
-Рассмотрим магические меттоды.
+Рассмотрим магические методы.
 
-#### Специальные методы для создания обектов
+#### Специальные методы для создания объектов
 
-Методы `__new__` и `__init__` вызываются при создании объектов. Ноый объект создаётся два этапа: первым вызывается статическим метод `__new__`возвращающи новый объект и затем вызывается метод `__init__` для инициализации созданного объекта переданными агрументыми.
+Методы `__new__` и `__init__` вызываются при создании объектов. Новый объект создаётся два этапа: первым вызывается статическим метод `__new__`возвращающий новый объект и затем вызывается метод `__init__` для инициализации созданного объекта переданными аргументами.
 
-Особый случай когда нужно необходимо переопределять метод `__new__` это наследование встроенных неизменяемых типов. Любая инициализация в наследниках должна проходить до создания класса, так как значение неизменяемых классов не меняется после создания. Последующие изменения объекта, в том числе в методе `__init__`, не влияет на объект. Пример создания класса цеых чисел которые округляет указанное значение до следущего целого:
+Особый случай когда нужно необходимо переопределять метод `__new__` это наследование встроенных неизменяемых типов. Любая инициализация в наследниках должна проходить до создания класса, так как значение неизменяемых классов не меняется после создания. Последующие изменения объекта, в том числе в методе `__init__`, не влияет на объект. Пример создания класса целых чисел которые округляет указанное значение до следующего целого:
 
 ```python
 import math
@@ -2136,168 +2136,245 @@ class NextInteger(int):
 print(NextInteger(2.2)) # 3
 ```
 
-Attempting to do the math.ceil operation in an __init__ method will cause the object initialization to fail. The __new__ method can also be overridden to create a Singleton super class; subclasses of this class can only ever have a single instance throughout the execution of a program; the following example illustrates this.
+Попытка вызвать `math.ceil` в методе `__init__` приведет к сбою инициализации объекта.
+
+Метод `__new__` может быть переопределён для создания класса синглтона (Singleton). Наследники этого класса смогут иметь только один экземпляр во время одного запуска программы. Следующий пример демонстрирует это: 
 
 ```python
 class Singleton:
-def __new__(cls, *args, **kwds):
-it = cls.__dict__.get("__it__")
-if it is None:
-return it
-cls.__it__ = it = object.__new__(cls)
-it.init(*args, **kwds)
-return it
-def __init__(self, *args, **kwsds):
-pass
+    def __new__(cls, *args, **kwds):
+        it = cls.__dict__.get("__it__")
+
+        if it is not None:
+            return it
+
+        cls.__it__ = it = object.__new__(cls)
+        it.__init__(*args, **kwds)
+        return it
+
+    def __init__(self, *args, **kwsds):
+        pass
+
+
+class SingletonType1(Singleton):
+    def __init__(self, msg):
+        super().__init__()
+        self.msg = msg
+
+
+class SingletonType2(Singleton):
+    def __init__(self, msg):
+        super().__init__()
+        self.msg = msg
+
+
+
+s11 = SingletonType1('msg11')
+s12 = SingletonType1('msg12')
+
+s21 = SingletonType2('msg21')
+s22 = SingletonType2('msg22')
+
+
+print(f'{s11.msg}: {id(s11)}')
+print(f'{s12.msg}: {id(s12)}')
+
+print(f'{s21.msg}: {id(s21)}')
+print(f'{s21.msg}: {id(s21)}')
 ```
 
-It is worth noting that when implementing the __new__ method, the implementation must call its
-base class’ __new__ and the implementation method must return an object.
-Users are already familiar with defining the __init__ method; the __init__ method is overridden
-to perform attribute initialization for an instance of a mutable types.
+```
+msg12: 62616936
+msg12: 62616936
+msg22: 62617008
+msg22: 62617008
+```
+
+Реализация метода `__new__` вызывает реализацию метода из базового класса `object.__new__(cls)`, которая возвращает объект.
+
+Метод `__init__` переопределён чтобы выполнить инициализацию атрибутов экземпляра изменяемых типов.
+
+#### Специальные методы для доступа к атрибутам
+
+Методы этой категории предоставляют средства для работы со ссылками на атрибуты, например, для доступа или установки значения атрибута.
+
+`__getattr__`
+
+Этот метод применяется для обработки ситуации когда ссылка на атрибут не найдена ссылка на атрибут. Метод вызывается только если ссылка на атрибут не найдена в дереве классов объекта. Метод возвращает значение атрибута или генерирует исключение `AttributeError `. 
+
+```python
+class Account(object):
+    num_accounts = 0
+
+    def __init__(self, name, balance):
+        self.name = name
+        self.balance = balance
+        Account.num_accounts += 1
+
+    def del_account(self):
+        Account.num_accounts -= 1
+
+    def __getattr__(self, name):
+        return "Hey I don't see any attribute called {}".format(name)
+
+    def deposit(self, amt):
+        self.balance = self.balance + amt
+
+    def withdraw(self, amt):
+        self.balance = self.balance - amt
+
+    def inquiry(self):
+        return "Name={}, balance={}".format(self.name, self.balance)
 
 
-#### 
-Special methods for attribute access
-The special methods in this category provide means for customizing attribute references; this maybe
-in order to access or set such an attribute. This set of special methods available for this include:
-1. __getattr__: This method can be implemented to handle situations in which a referenced
-attribute cannot be found. This method is only called when an attribute that is referenced is
-neither an instance attribute nor is it found in the class tree of that object. This method should
-return some value for the attribute or raise an AttributeError exception. For example, if x
-is an instance of the Account class defined above, trying to access an attribute that does not
-exist will result in a call to this method as shown in the following snippet
-Object Oriented Programming 57
+x = Account('obi', 0)
+print(x.balaance) # Hey I dont see any attribute called balaance
+```
+
+Будьте осторожны с реализацией `__getattr__`, если в методе будет ссылка на несуществующий атрибут то возникнет бесконечный цикл с вызовом метода `__getattr__`.
+
+
+```python
 class Account(object):
-num_accounts = 0
-def __init__(self, name, balance):
-self.name = name
-self.balance = balance
-Account.num_accounts += 1
-def del_account(self):
-Account.num_accounts -= 1
-def __getattr__(self, name):
-return "Hey I don't see any attribute called {}".format(name)
-def deposit(self, amt):
-self.balance = self.balance + amt
-def withdraw(self, amt):
-self.balance = self.balance - amt
-def inquiry(self):
-return "Name={}, balance={}".format(self.name, self.balance)
->>> x = Account('obi', 0)
->>> x.balaance
-Hey I dont see any attribute called balaance
-Care should be taken with the implementation of __getattr__ because if the implementation
-references an instance attribute that does not exist, an infinite loop may occur because the
-__getattr__ method is called successively without end.
-class Account(object):
-num_accounts = 0
-def __init__(self, name, balance):
-self.name = name
-self.balance = balance
-Account.num_accounts += 1
-def del_account(self):
-Account.num_accounts -= 1
-def __getattr__(self, name):
-return self.namee # trying to acess a variable that doesnt exist will result in __getatt\
-r___ calling itself over and over again
-def deposit(self, amt):
-self.balance = self.balance + amt
-def withdraw(self, amt):
-Object Oriented Programming 58
-self.balance = self.balance - amt
-def inquiry(self):
-return "Name={}, balance={}".format(self.name, self.balance)
->>> x = Account('obi', 0)
->>> x.balaance # this will result in a RuntimeError: maximum recursion depth exceeded while call\
-ing a Python object exception
-1. __getattribute__: This method is implemented to customize the attribute access for a class.
-This method is always called unconditionally during attribute access for instances of a class.
-2. __setattr__: This method is implemented to unconditionally handle all attribute assignment.
-__setattr__ should insert the value being assigned into the dictionary of the instance
-attributes rather than using self.name=value which results in an infinite recursive call. When
-__setattr__() is used for instance attribute assignment, the base class method with the same
-name should be called such as super().__setattr__(self, name, value).
-3. __delattr__: This is implemented to customize the process of deleting an instance of a class.
-it is invoked whenever del obj is called.
-4. __dir__: This is implemented to customize the list of object attributes returned by a call to
-dir(obj).
-Special methods for Type Emulation
-Built-in types in python have special operators that work with them. For example, numeric types
-support the + operator for adding two numbers, numeric types also support the - operator for
-subtracting two numbers, sequence and mapping types support the [] operator for indexing values
-held. Sequence types even also have support for the + operator for concatenating such sequences.
-User defined classes can be customized to behave like these built-in types where it makes sense.
-This can be done by implementing the special methods that are invoked by the interpreter when
-these special operators are encountered. The special methods that provide these functionalities for
-emulating built-in types can be broadly grouped into one of the following:
-Numeric Type Special Methods
-The following table shows some of the basic operators and the special methods invoked when these
-operators are encountered.
-Object Oriented Programming 59
-Special Method Operator Description
-a.__add__(self, b) binary addition, a + b
-a.__sub__(self, b) binary subtraction, a - b
-a.__mul__(self, b) binary multiplication, a * b
-a.__truediv__(self, b) division of a by b
-a.__floordiv__(self, b) truncating division of a by b
-a.__mod__(self, b) a modulo b
-a.__divmod__(self, b) returns a divided by b, a modulo b
-a.__pow__(self, b[, modulo]) a raised to the bth power
-Python has the concept of reflected operations; this was covered in the section on the NotImplemented of previous chapter. The idea behind this concept is that if the left operand of a binary
-arithmetic operation does not support a required operation and returns NotImplemented then an
-attempt is made to call the corresponding reflected operation on the right operand provided the
-type of both operands differ. An example of this rarely used functionality is shown in the following
-trivial example for emphasis.
+    num_accounts = 0
+
+    def __init__(self, name, balance):
+        self.name = name
+        self.balance = balance
+        Account.num_accounts += 1
+
+    def del_account(self):
+        Account.num_accounts -= 1
+
+    def __getattr__(self, name):
+        return self.namee # пробум доступ к несуществующей переменной
+
+    def deposit(self, amt):
+        self.balance = self.balance + amt
+
+    def withdraw(self, amt):
+        self.balance = self.balance - amt
+
+    def inquiry(self):
+        return "Name={}, balance={}".format(self.name, self.balance)
+
+
+x = Account('obi', 0)
+print(x.balaance) # RecursionError: maximum recursion depth exceeded
+```
+
+`__getattribute__`
+
+Этот метод реализуется для настройки доступа к атрибутам класса. Метод всегда вызывается во время доступа к атрибутам экземпляров класса.
+
+`__setattr__`
+
+Этот метод реализован для обработки присвоения атрибутам. В реализации метода необходимо использовать присвоение значений в словарь экземпляра вместо использования `self.name=value`. Обязательно необходимо вызывать метод базового класса с аналогичным именем:
+
+```python
+super().__setattr__(self, name, value)
+```
+
+`__delattr__`
+
+Метод реализован для настройки удаления атрибутов экземпляра класса и вызывается при использовании `del obj.attr`.
+
+`__dir__`
+
+Метод реализован для настройки списка атрибутов объекта возвращаемых вызовом `dir(obj)`.
+
+#### Методы эмуляции типов
+
+Для работы со встроенными типами Python используются специальные операции. Например, числовые типы поддерживают оператор `+` для сложения двух чисел,оператор `-` для вычитания двух чисел, а типы последовательностей и словарей поддерживают  оператор `[]` для доступа к значениям. Последовательности так же поддерживают оператор `+` для соединения последовательностей. Пользовательские классы могут так же использовать эти операторы как и встроенные типы. Такое поведение реализуется через специальные методы которые вызываются при появлении специальных операторов. Эти методы можно сгруппировать на несколько типов которые мы разберем.
+
+##### Методы числовых типов
+
+Следующая таблица показывает базовые операции и специальные методы вызывающиеся когда появляются эти операторы:
+
+| Метод                          | Оператор            |
+| ------------------------------ | ------------------- |
+| `a.__add__(self, b)`           | `a + b`             |
+| `a.__sub__(self, b)`           | `a - b`             |
+| `a.__mul__(self, b)`           | `a * b`             |
+| `a.__truediv__(self, b)`       | `a / b`             |
+| `a.__floordiv__(self, b)`      | `a // b`            |
+| `a.__mod__(self, b)`           | `a % b`             |
+| `a.__divmod__(self, b)`        | `divmod(a, a)`      |
+| `a.__pow__(self, b[, modulo])` | `pow(a, b, modulo)` |
+
+Python содержит концепцию отражённых операций (reflected operations), это описывалось в разделе про `NotImplemented` предыдущей главы. Ключевая идея этой концепции в том что если левый операнд бинарной арифметической операции не поддерживает требуемую операцию и возвращает `NotImplemented`, то производится попытка соответствующего вызова отраженной операции для правого операнда. Пример этого редко используемого функционала ниже:
+
+```python
 class MyNumber(object):
-def __init__(self, x):
-self.x = x
-def __str__(self):
-return str(self.x)
->>> 10 - MyNumber(9) # int type, 10, does not know how to subtract MyNumber type and MyNumbe\
-r does not know how to handle the operation too
-Traceback (most recent call last):
-File "<stdin>", line 1, in <module>
-TypeError: unsupported operand type(s) for -: 'int' and 'MyNumber'
-In the next snippet the class implements the reflected special method and this reflected method is
-called by the interpreter.
+    def __init__(self, val):
+        self.val = val
+
+    def __str__(self):
+        return str(self.val)
+
+
+print((10 - MyNumber(9))) # TypeError: unsupported operand type(s) for -: 'int' and 'MyNumber'
+```
+
+В наследнике добавляем поддержку отраженной операции:
+
+```python
+class MyNumber(object):
+    def __init__(self, val):
+        self.val = val
+
+    def __str__(self):
+        return str(self.val)
+
+
 class MyFixedNumber(MyNumber):
-def __rsub__(self, other): # reflected operation implemented
-return MyNumber(other - self.val)
->>> (10 - MyFixedNumber(9)).val
-1
-The following special methods implement reflected binary arithmetic operations.
-Object Oriented Programming 60
-Special Method Operator Description
-a.__radd__(self, b) reflected binary addition, a + b
-a.__rsub__(self, b) reflected binary subtraction, a - b
-a.__rmul__(self, b) reflected binary multiplication, a * b
-a.__rtruediv__(self, b) reflected division of a by b
-a.__rfloordiv__(self, b) reflected truncating division of a by b
-a.__rmod__(self, b) reflected a modulo b
-a.__rdivmod__(self, b) reflected a divided by b, a modulo b
-a.__rpow__(self, b[, modulo]) reflected a raised to the bth power
-Another set of operators that work with numeric types are the augmented assignment operators.
-An example of an augmented operation is shown in the following code snippet.
->>> val = 10
->>> val += 90
->>> val
-100
->>>
-A few of the special methods for implementing augmented arithmetic operations are listed in the
-following table.
-Special Method Description
-a.__iadd__(self, b) a += b
-a.__isub__(self, b) a -= b
-a.__imul__(self, b) a *= b
-a.__itruediv__(self, b) a //= b
-a.__ifloordiv__(self, b) a /= b
-a.__imod__(self, b) a %= b
-a.__ipow__(self, b[, modulo]) a **= b
-Sequence and Mapping Types Special Methods
-Sequence and mapping are often referred to as container types because they can hold references to
-other objects. User-defined classes can emulate container types to the extent that this makes sense
-if such classes implement the special methods listed in the following table.
+    def __rsub__(self, other):
+        return MyNumber(other - self.val)
+
+
+print((10 - MyFixedNumber(9)).val) # 1
+```
+
+Следующие методы реализуют отражённые бинарные арифметические операции:
+
+| Метод                           | Оператор            |
+| ------------------------------- | ------------------- |
+| `a.__radd__(self, b)`           | `a + b`             |
+| `a.__rsub__(self, b)`           | `a - b`             |
+| `a.__rmul__(self, b)`           | `a * b`             |
+| `a.__rtruediv__(self, b)`       | `a / b`             |
+| `a.__rfloordiv__(self, b)`      | `a // b`            |
+| `a.__rmod__(self, b)`           | `a % b`             |
+| `a.__rdivmod__(self, b)`        | `divmod(a, a)`      |
+| `a.__rpow__(self, b[, modulo])` | `pow(a, b, modulo)` |
+
+Числовые типы поддерживают расширенные операторы присваивания:
+
+```python
+val = 10
+val += 90
+print(val) # 100
+```
+
+Список методов реализующих расширенные операции присваивания:
+
+| Метод                      | Оператор       |
+| -------------------------- | -------------- |
+| `a.__iadd__(self, b)`      | `a += b`       |
+| `a.__isub__(self, b)`      | `a -= b`       |
+| `a.__imul__(self, b)`      | `a *= b`       |
+| `a.__itruediv__(self, b)`  | `a /= b`       |
+| `a.__ifloordiv__(self, b)` | `a //= b`      |
+| `a.__imod__(self, b)`      | `a %= b`       |
+| `a.__idivmod__(self, b)`   | `divmod(a, a)` |
+| `a.__ipow__(self, b)`      | `a **= b`      |
+
+##### Методы последовательностей и отображения
+
+Последовательности и отображения часто называют контейнерами, потому что они содержат ссылки на другие объекты. Пользовательские типы могут эмулировать поведение контейнеров реализовав специальные методы.
+
+
+
 Special Method Description
 __len__(obj) returns length of obj. This is invoked to
 implement the built-in function len(). An
@@ -2354,8 +2431,8 @@ def withdraw(self, amt):
 self.balance = self.balance - amt
 def inquiry(self):
 return self.balance
->>> acct = Account()
->>> acct("Testing function call on instance object")
+acct = Account()
+acct("Testing function call on instance object")
 I was called with 'Testing function call on instance object'
 Special Methods for comparing objects
 User-defined classes can provide custom implementation for the special methods invoked by the
@@ -2375,6 +2452,7 @@ means that if a call to the implementation of any of these methods on the left a
 NotImplemented, the reflected operator is is used.
 Object Oriented Programming 63
 Special Methods and Attributes for Miscellaneous Customizations
+
 1. __slots__: This is a special attribute rather than a method. It is an optimization trick that
 is used by the interpreter to efficiently store object attributes. Objects by default store all
 attributes in a dictionary (the __dict__ attribute) and this is very inefficient when objects
