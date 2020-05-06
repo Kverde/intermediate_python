@@ -2373,191 +2373,191 @@ print(val) # 100
 
 Последовательности и отображения часто называют контейнерами, потому что они содержат ссылки на другие объекты. Пользовательские типы могут эмулировать поведение контейнеров реализовав специальные методы.
 
+`__len(obj)__`
 
+Возвращает длину объекта. Метод вызывается из встроенной функции `len`.
 
-Special Method Description
-__len__(obj) returns length of obj. This is invoked to
-implement the built-in function len(). An
-object that doesn’t define a __bool__() method
-and whose __len__() method returns zero is
-considered to be false in a Boolean context.
-Object Oriented Programming 61
-Special Method Description
-__getitem__(obj, key) fetches item, obj[key]. For sequence types, the
-keys should be integers or slice objects. If key is
-of an inappropriate type, TypeError may be
-raised; if the key has a value outside the set of
-indices for the sequence, IndexError should be
-raised. For mapping types, if key is absent from
-the container, KeyError should be raised.
-__setitem__(obj, key, value) Sets obj[key] = value
-__delitem__(obj, key) deletes obj[key]. Invoked by del obj[key]
-__contains__(obj, key) Returns true if key is contained in obj and false
-otherwise. Invoked by a call to key in obj
-__iter__(self) This method is called when an iterator is
-required for a container. This method should
-return a new iterator object that can iterate over
-all the objects in the container. For mappings, it
-should iterate over the keys of the container.
-Iterator objects also need to implement this
-method; they are required to return themselves.
-This is also used by the for..in construct.
-Sequence types such as lists support the addition (for concatenating lists) and multiplication
-operators (for creating copies), + and * respectively, by defining the methods __add__(), __radd_-
-_(), __iadd__(), __mul__(), __rmul__() and __imul__(). Sequence types also implement the
-__reversed__ method that implements the reversed() method that is used for reverse iteration
-over a sequence. User defined classes can implement these special methods to get the required
-functionality.
-Emulating Callable Types
+Объект не реализующий метод `__bool()__` и возвращающий в методе `__len__()` ноль, рассматривается как `False` в контексте когда ожидается логический тип.
+
+`__getitem__(obj, key)`
+
+Возвращает элемент, вызывается оператором `obj[key]`. Для последовательностей `key` должен быть числом или объектом `slice`.  Если `key` неподходящего типа, должно быть сгенерировано исключение `TypeError`. Если `key` выходит за границы множества индексов последовательности, должно быть сгенерировано исключение `IndexError`.  Для отображений, если переданного ключа нет в контейнере то должно генерироваться исключение  `KeyError`.
+
+`__setitem__(obj, key, value)`
+
+Установка значения элемента`obj[key] = value`.
+
+`__delitem__(obj, key)`
+
+Вызывается командой `del obj[key]`.
+
+`__contains__(obj, key)`
+
+Возвращает `True` если `key` содержится в контейнере и `False` в противоположном случае. Вызывается командой `key in obj`.
+
+`__iter__(self) `
+
+Этот метод вызывается когда для контейнера требуется итератор. Метод должен возвращать объект итератора который может перебрать все объекты в контейнере. Для отображений объект должен перебирать ключи контейнера. Объект итератора так же должен реализовывать этот метод и возвращать себя. Метод используется в конструкции `for..in`.
+
+Последовательности такие как списки дополнительно поддерживают сложение (для соединения списков) и умножение (для создания копий) с помощью методов: `__add__()`, `__radd__()`, `__iadd__()`, `__mul__()`, `__rmul__()` и `__imul__()`. 
+
+Последовательности так же реализуют  метод`__reversed__()` используемый встроенной функцией `reversed()` для перебора объектов последовательности в обратном порядке.
+
+Пользовательские классы могут реализовывать все эти специальные методы для получения требуемой функциональности.
+
+##### Методы вызываемых типов
+
 Callable types support the function call syntax, (args). Classes that implement the __call__(self[,
 args...]) method are callable. User defined classes for which this functionality makes sense can
 implement this method to make class instances callable. The following example shows a class
 implementing the __call__(self[, args...]) method and how instances of this class can be called
 using the function call syntax.
-Object Oriented Programming 62
-class Account(object):
-num_accounts = 0
-def __init__(self, name, balance):
-self.name = name
-self.balance = balance
-Account.num_accounts += 1
-def __call__(self, arg):
-return "I was called with \'{}\'".format(arg)
-def del_account(self):
-Account.num_accounts -= 1
-def deposit(self, amt):
-self.balance = self.balance + amt
-def withdraw(self, amt):
-self.balance = self.balance - amt
-def inquiry(self):
-return self.balance
-acct = Account()
-acct("Testing function call on instance object")
-I was called with 'Testing function call on instance object'
-Special Methods for comparing objects
-User-defined classes can provide custom implementation for the special methods invoked by the
-five object comparison operators in python, <, >, >=, <=, = in order to control how these operators
-work. These special methods are given in the following table.
-Special Method Description
-a.__lt__(self, b) a < b
-a.__le__(self, b) a <= b
-a.__eq__(self, b) a == b
-a.__ne__(self, b) a != b
-a.__gt__(self, b) a > b
-a.__ge__(self, b) a >= b
-In Python, x==y is True does not imply that x!=y is False so __eq__() should be defined along
-with __ne__() so that the operators are well behaved. __lt__() and __gt__(), and __le__() and
-__ge__() are each other’s reflection while __eq__() and __ne__() are their own reflection; this
-means that if a call to the implementation of any of these methods on the left argument returns
-NotImplemented, the reflected operator is is used.
-Object Oriented Programming 63
-Special Methods and Attributes for Miscellaneous Customizations
 
-1. __slots__: This is a special attribute rather than a method. It is an optimization trick that
-is used by the interpreter to efficiently store object attributes. Objects by default store all
-attributes in a dictionary (the __dict__ attribute) and this is very inefficient when objects
-with few attributes are created in large numbers. __slots__ make use of a static iterable that
-reserves just enough space for each attribute rather than the dynamic __dict__ attribute. The
-iterable representing the __slot__ variable can also be a string made up of the attribute names.
-The following example shows how __slots__ works.
+Вызываемые типы поддерживают синтаксис вызова функций `func(args)`. Классы реализующие метод `__call__(self[, args...])` являются вызываемыми, объекты этих классов можно вызывать как функцию. 
+
+```python
+class Account(object):
+    num_accounts = 0
+
+    def __init__(self, name, balance):
+        self.name = name
+        self.balance = balance
+        Account.num_accounts += 1
+
+    def __call__(self, arg):
+        return "I was called with \'{}\'".format(arg)
+
+    def del_account(self):
+        Account.num_accounts -= 1
+
+    def deposit(self, amt):
+        self.balance = self.balance + amt
+
+    def withdraw(self, amt):
+        self.balance = self.balance - amt
+
+    def inquiry(self):
+        return self.balance
+
+
+acct = Account('Ivan', 0)
+print(acct("Testing function call on instance object")) # I was called with 'Testing function call on instance object
+
+```
+
+#### Специальные методы для сравнения объектов
+
+Пользовательские классы могут поддерживать особую реализацию для специальных методов вызываемых операторами сравнения: <, >. <=, >=, ==. 
+
+| Метод               | Оператор |
+| ------------------- | -------- |
+| `a.__lt__(self, b)` | `a < b`  |
+| `a.__le__(self, b)` | `a <= b` |
+| `a.__eq__(self, b)` | `a == b` |
+| `a.__ne__(self, b)` | `a != b` |
+| `a.__gt__(self, b)` | `a > b`  |
+| `a.__ge__(self, b)` | `a >= b` |
+
+В Python, если `x==y` равно `True` это не означает что `x != y` равно `False`, поэтому совместно с `__eq__()`  реализуется `__ne__()` для правильной работы всех операторов. Методы`__lt__()`, `__gt__()`, и `__le__()`, `__ge__()` являются отраженными операторами, в то же время `__eq__()` и `__ne__()` являются своим собственным отражением. Это означает что если при реализации любого из этих методов возвращается `NotImplemented` то используется соответствующий отраженный оператор.
+
+#### Другие специальные методы
+
+`__slots__()`
+
+Это скорее специальный атрибут а не метод. Он используется для оптимизации, более эффективного хранение интерпретатором атрибутов объектов. По умолчанию объекты сохраняют свои атрибуты в словарь (атрибут `__dict__`) и это очень неэффективно если объект с несколькими атрибутами создаётся большое количество раз. `__slots__` статически резервирует место для атрибутов вместо динамического `__dict__`. 
+
+```python
 class Account:
-"""base class for representing user accounts"""
-# we can also use __slots__ = "name balance"
-__slots__ = ['name', 'balance']
-num_accounts = 0
-def __init__(self, name, balance):
-self.name = name
-self.balance = balance
-Account.num_accounts += 1
-def del_account(self):
-Account.num_accounts -= 1
-def __getattr__(self, name):
-"""handle attribute reference for non-existent attribute"""
-return "Hey I dont see any attribute called {}".format(name)
-def deposit(self, amt):
-self.balance = self.balance + amt
-def withdraw(self, amt):
-self.balance = self.balance - amt
-def inquiry(self):
-return "Name={}, balance={}".format(self.name, self.balance)
->>>acct = Account("obi", 10)
->>>acct.__dict__ # __dict__ attribute is gone
-Hey I dont see any attribute called __dict__
->>>acct.x = 10
-Traceback (most recent call last):
-File "acct.py", line 32, in <module>
-acct.x = 10
-AttributeError: 'Account' object has no attribute 'x'
->>>acct.__slots__
-['name', 'balance']
-Object Oriented Programming 64
-A few things that are worth noting about __slots__ include the following:
-1. If a superclass has the __dict__ attribute then using __slots__ in sub-classes is of no use as
-the dictionary is available.
-2. If __slots__ are used then attempting to assign to a variable not in the __slots__ variable
-will result in an AttributeError as shown in the previous example.
-3. Sub-classes will have a __dict__ even if they inherit from a base class with a __slots__-
-declaration; subclasses have to define their own __slots__ attribute which must contain only
-the additional names in order to avoid having the __dict__ for storing names.
-4. Subclasses with “variable-length” built-in types as base class cannot have a non-empty __-
-slots__ variable.
-5. __bool__: This method implements the truth value testing for a given class; it is invoked by
-the built-in operation bool() and should return a True or False value. In the absence of an
-implementation, __len__() is called and if __len__ is implemented, the object’s truth value
-is considered to be True if result of the call to __len__ is non-zero. If neither __len__() nor
-__bool__() are defined by a class then all its instances are considered to be True.
-6. __repr__ and __str__: These are two closely related methods as they both return string
-representations for a given object and only differ subtly in the intent behind their creation.
-Both are invoked by a call to repr and str methods respectively. The __repr__ method
-implementation should return an unambiguous string representation of the object it is
-being called on. Ideally, the representation that is returned should be an expression that
-when evaluated by the eval method returns the given object; when this is not possible
-the representation returned should be as unambiguous as possible. On the other hand,
-__str__ exists to provide a human readable version of an object; a version that would make
-sense to some one reading the output but that doesn’t necessarily understand the semantics of
-the language. A very good illustration of how both methods differ is shown below by calling
-both methods on a data object.
->>> import datetime
->>> today = datetime.datetime.now()
->>> str(today)
-'2015-07-05 20:55:58.642018' # human readable version of datetime object
->>> repr(today)
-'datetime.datetime(2015, 7, 5, 20, 55, 58, 642018)' # eval will return the datetime object
-When using string interpolation, %r makes a call to repr while %s makes a call to str.
-7. __bytes__: This is invoked by a call to the bytes() built-in and it should return a byte string
-representation for an object. The byte string should be a bytes object.
-8. __hash__: This is invoked by the hash() built-in. It is also used by operations that work on
-types such as set, frozenset, and dict that make use of object hash values. Providing __-
-hash__ implementation for user defined classes is an involved and delicate act that should be
-carried out with care as will be seen. Immutable built-in types are hashable while mutable
-types such as lists are not. For example, the hash of a number is the value of the number as
-shown in the following snippet.
-Object Oriented Programming 65
->>> hash(1)
-1
->>> hash(12345)
-12345
->>>
-User defined classes have a default hash value that is derived from their id() value. Any __hash__()
-implementation must return an integer and objects that are equal by comparison must have the
-same hash value so for two object, a and b, (a==b and hash(a)==hash(b)) must be true. A few
-rules for implementing a __hash__() method include the following: 1. A class should only define
-the __hash__() method if it also defines the __eq__() method.
-1. The absence of an implementation for the __hash__() method in a class renders its instances
-unhashable.
-2. The interpreter provides user-defined classes with default implementations for __eq__() and
-__hash__(). By default, all objects compare unequal except with themselves and x.__hash_-
-_() returns a value such that (x == y and x is y and hash(x) == hash(y)) is always true.
-In CPython, the default __hash__() implementation returns a value derived from the id() of
-the object.
-3. Overriding the __eq__() method without defining the __hash__() method sets the __-
-hash__() method to None in the class. When the __hash__() method of a class is None, an
-instance of the class will raise an appropriate TypeError when an attempt is made to retrieve
-its hash value. The object will also be correctly identified as unhashable when checking
-isinstance(obj, collections.Hashable).
-4. If a class overrides the __eq__() and needs to keep the implementation of __hash__() from
-a base class, this must be done explicitly by setting __hash__ = BaseClass.__hash__.
-5. A class that does not override the __eq__() can suppress hash support by setting __hash__ to
-None. If a class defines its own __hash__() method that explicitly raises a TypeError,
-instances of such class will be incorrectly identified as hashable by an isinstance(obj,
-collections.Hashable) test.
+    """base class for representing user accounts"""
+
+    __slots__ = ['name', 'balance']
+    num_accounts = 0
+
+    def __init__(self, name, balance):
+        self.name = name
+        self.balance = balance
+        Account.num_accounts += 1
+
+    def del_account(self):
+        Account.num_accounts -= 1
+
+    def __getattr__(self, name):
+        """Обрабатываем ссылки на несуществующие атрибуты"""
+        return "Hey I dont see any attribute called {}".format(name)
+
+    def deposit(self, amt):
+        self.balance = self.balance + amt
+
+    def withdraw(self, amt):
+        self.balance = self.balance - amt
+
+    def inquiry(self):
+        return "Name={}, balance={}".format(self.name, self.balance)
+
+
+acct = Account("obi", 10)
+print(acct.__dict__) # # Hey I dont see any attribute called __dict__
+
+print(acct.__slots__)  # ['name', 'balance']
+
+acct.x = 10 # AttributeError: 'Account' object has no attribute 'x'
+```
+
+Рассмотрим еще несколько вещей касающихся `__slots__`.
+
+Если базовый класс содержит атрибут `__dict__` то использование `__slots__` в наследника бесполезно, словарь всё равно будет доступен.
+
+Если используется `__slots__` и происходит попытка присвоения переменной не включенной в `__slots__` то генерируется исключение `AttributeError`, как показано в предыдущем примере.
+
+Наследники будут содержать `__dict__` даже если они наследуются из класса со `__slots__`. Для того чтобы скрыть словарь наследники должны объявить свой собственный `__slots__` который будет содержать только дополнительные имена.
+
+`__bool__`
+
+Метод используется при преобразовании класса к логическому значению. Метод вызывается встроенной функцией `bool()` и должен возвращать `True` или `False`.  При отсутствии `__bool__` вызывается `__len__` и объект преобразовывается в `True` если метод возвращает значение отличное от нуля. Если не `__bool__`  не `__len__` не реализованы то все объекты рассматриваются как `True`.
+
+`__repr__` и `__str__`
+
+Эти методы возвращают строковое представление объекта. Методы используются в соответствующих встроенных функциях `repr()` и `str()`. 
+
+Реализация `__repr__` должна возвращать как можно более недвусмысленное представление объекта. В идеале это будет строка запустив которую через `eval` будет создан исходный объект.
+
+Реализация `__str__` должна возвращать удобное для человека представление объекта.
+
+Рассмотрим пример с объектом даты и времени:
+
+```python
+import datetime
+
+today = datetime.datetime.now()
+
+print(str(today))
+# '2015-07-05 20:55:58.642018'
+
+print(repr(today))
+# 'datetime.datetime(2015, 7, 5, 20, 55, 58, 642018)'
+```
+
+`__bytes__`
+
+Метод вызывается встроенной функцией `bytes()` для преобразования объекта в бинарный (byte string) вид.
+
+`__hash__`
+
+Метод вызывается встроенной функцией `hash()`. Он также используется операциями над такими типами как `set`, `frozenset` и `dict` которые используют хеши объектов. Поддержка `__hash__` для пользовательских классов это сложное действие, как будет показано ниже. Встроенные неизменяемые классы являются хешируемыми, а изменяемые нет. Например, хешем числе является само число:
+
+```python
+print(hash(1)) # 1
+print(hash(12345)) # 12345
+```
+
+По умолчанию хеш пользовательских классов равен их значению `id()`.  Реализация метода `__hash__()` должна возвращать число и равные объекты должны возвращать равное значение хеша: значение выражения `a==b and hash(a)==hash(b)` должно быть `True`. Правила реализации этого метода:
+
+1. Класс должен определять метод `__hash__()` только если уже определён `__eq_()`.
+2. Отсутствие реализации `__hash__()` делает класс нехешируемым.
+3. Интерпретатор предоставляет пользовательским классам реализацию `__hash__()` и `__eq__()` по умолчанию: все объекты равны сами себе.
+4. Переопределение метода `__eq__()` без определения метода `__hash__()` устанавливает `__hash__()` в значение `None`. Когда метод `__hash__()` равен `None`, экземпляр класса генерирует исключение при попытке получить значение хеша. Объект корректно идентифицируется как нехешируемый при проверке `isinstance(obj, collection.Hashable).
+5. Если класс переопределяет `__eq__()` и необходимо сохранить реализацию `__hash__()` из базового класса, это может быть сделано присвоением `__hash__ = BaseClass.__hash__`.
+6. Класс который не переопределяет `__eq__()` может подавить хеширование установкой `__hash__` в `None`. Если класс определит метод `__hash__()` который в явном виде генерирует исключение `TypeError`, экземпляры этого класса будут некорректно определятся хешируемыми командой `isinstance(obj, collections.Hashable)`.
+
+
+
