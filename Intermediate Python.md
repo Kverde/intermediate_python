@@ -2770,4 +2770,227 @@ if __name__ == "__main__":
     import doctest
     doctest.testmod()
 ```
+### 6.4 Наследование
+
+Наследование &mdash; это механизм создания новых классов. Наследники специализируют или изменяют базовые классы добавляя в них новую функциональность. Python поддерживает множественное наследование как C++. Пример одиночного наследования в Python:
+
+```python
+class Account:
+    """base class for representing user accounts"""
+    num_accounts = 0
+
+
+    def __init__(self, name, balance):
+        self.name = name
+        self.balance = balance
+        Account.num_accounts += 1
+
+    def del_account(self):
+        Account.num_accounts -= 1
+
+    def __getattr__(self, name):
+        """handle attribute reference for non-existent attribute"""
+        return "Hey I dont see any attribute called {}".format(name)
+
+    def deposit(self, amt):
+        self.balance = self.balance + amt
+
+    def withdraw(self, amt):
+        self.balance = self.balance - amt
+
+    def inquiry(self):
+        return "Name={}, balance={}".format(self.name, self.balance)
+
+class SavingsAccount(Account):
+
+    def __init__(self, name, balance, rate):
+        super().__init__(name, balance)
+        self.rate = rate
+
+    def __repr__(self):
+        return "SavingsAccount({}, {}, {})".format(self.name, self.balance, self.rate)
+```
+
+```python
+>>>acct = SavingsAccount("Obi", 10, 1)
+>>>repr(acct)
+SavingsAccount(Obi, 10, 1)
+```
+
+#### Ключевое слово super 
+
+В одиночной иерархии наследования `super` используется для ссылки на родительский класс без явного указания на него. Это похоже на метод `super` в Java. `super` применяется при переопределении метода, когда требуется вызвать родительскую версию переопределяемого метода. В примере выше, метод `__init__` в классе `SavingsAccount` переопределён, но с помощью `super` вызывается метод `__init__` родительского класса. При множественном наследовании `super` играет более важную роль.
+
+#### Множественное наследование
+
+В множественном наследовании класс может иметь несколько родительских классов. Одной из сложностей такого вида наследования является поиск нужной версии метода при его вызове. Представим что класс `D` наследник классов `B` и `C` и нужно вызывать метод родительского класса когда оба родителя имеют этот метод. В Python эта ситуация решается алгоритмом Method Resolution Order (MRO), он определяет как производится поиск метода в классе и всех базовых классах. Порядок методов вычисляется в момент определения класса и сохраняется в поле класса `__mro__`.
+
+```python
+>>> class A:
+... def meth(self): return "A"
+...
+>>> class B(A):
+... def meth(self): return "B"
+...
+>>> class C(A):
+... def meth(self): return "C"
+...
+>>> class D(B, C):
+... def meth(self): return "X"
+...
+```
+
+```python
+>>>
+>>> D.__mro__
+(<class '__main__.D'>, <class '__main__.B'>, <class '__main__.C'>, <class '__main__.A'>, <class 'object'>)
+>>>
+```
+
+Алгоритм MRO состоит из двух шагов: поиск в глубину слева направо по всем классам в иерархии и удаление повторявшихся классов, кроме последнего вхождения.
+
+В примере выше поиск в глубину по всем классам выдаёт такой список классов:
+
+```python
+[D, B, A, C, A, object]
+```
+
+Затем удаление повторяющихся классов, кроме последнего вхождения:
+
+```python
+[D, B, C, A, object]
+```
+
+Обратите внимание что если предок явно не задан, то класс наследуются от класса `object`.
+
+#### Множественном наследование и super
+
+Рассмотрим иерархию из прошлого примера. Класс `A` объявляет метод переопределяемый классами `B`, `C` и `D`. Предположим есть требование чтобы все методы вызывались, они сохраняют данные в каждом классе где объявлены, пропуск вызова приведёт к потере данных. Такое требование реализуется с помощью метода `super` и MRO:
+
+```python
+class A(object):
+    
+	def meth(self):
+        "save A's data"
+        print("saving A's data")
+
+class B(A):
+    
+	def meth(self):
+        "save B's data"
+        super(B, self).meth()
+        print("saving B's data")
+
+class C(A):
+    
+	def meth(self):
+        "save C's data"
+        super(C, self).meth()
+        print("saving C's data")
+
+class D(B, C):
+
+    def meth(self):
+        "save D's data"
+        super(D, self).meth()
+        print("saving D's data")
+```
+
+Предположим метод `self.meth()` вызывается из экземпляра класса `D`. Тогда `super(D, self).meth()` найдёт и вызовет метод `B.meth(self)`, так как `B` первый базовый класс следующий за `D` в `D.__mro__` и `B` определяет метод `meth`.
+
+Теперь `B.meth` вызывает `super(B, self).meth()` и так как `self` является экземпляром класса `D`, следующий класс после `B` это `C` (`D.__mro__ = [D, B, C, A]`) и поиск `meth` продолжается.
+
+Следующим вызывается `C.meth`, который в свою очередь вызывает `super(C, self).meth()`.
+
+Следующий после `C` класс в MRO это `A` и вызывается метод `A.meth`. Это исходное определение `meth`, поэтому вызов `super` не производится.
+
+Используя `super` и MRO, интерпретатор находит и вызывает все версии метода `meth` реализованные в каждом класс иерархии.
+
+Несмотря на всё сказанное, множественного наследования лучше избегать, потому, что для более сложных иерархий, вызовы могут быть намного сложнее чем в приведённых примерах.
+
+### 6.5 Статичные и классовые методы
+
+По умолчанию методы определённые в классе работают с экземплярами класса. Для определения статических и классовых методов применяются декораторы `@staticmethod` и `@classmethod`.
+
+#### Статичные методы
+
+Статичные методы это обычные функции внутри пространства имён класса. Ссылка на статичный метод из класса возвращает функцию вместо несвязанного метода:
+
+```python
+class Account(object):
+    num_accounts = 0
+
+    def __init__(self, name, balance):
+        self.name = name
+        self.balance = balance
+        Account.num_accounts += 1
+
+    def del_account(self):
+        Account.num_accounts -= 1
+
+    def deposit(self, amt):
+        self.balance = self.balance + amt
+
+    def withdraw(self, amt):
+        self.balance = self.balance - amt
+
+    def inquiry(self):
+        return "Name={}, balance={}".format(self.name, self.balance)
+
+    @staticmethod
+    def static_test_method():
+        return "Current Account"
+```
+
+```python
+>>> Account.static_test_method
+<function Account.static_test_method at 0x101b846a8>
+```
+
+Декоратор `@staticmethod` используется для определения статического метода. Такой метод не требует аргумента `self`.
+
+Статичные методы предоставляют механизм для организации кода. Метод связывается с классом и может быть переопределён в потомках.
+
+В отличии от обычных методов, являющихся обёртками над функциями, статичные методы возвращают функцию без изменений.
+
+#### Классовые методы
+
+Классовые методы работают с классами вместо экземпляров классов. Классовый метод создаётся декоратором `@classmethod`. В первый аргумент такого метода передаётся ссылка на класс вместо экземпляра объекта:
+
+```python
+import json
+
+class Account(object):
+    num_accounts = 0
+
+    def __init__(self, name, balance):
+        self.name = name
+        self.balance = balance
+        Account.num_accounts += 1
+
+    def del_account(self):
+        Account.num_accounts -= 1
+
+    def deposit(self, amt):
+        self.balance = self.balance + amt
+
+    def withdraw(self, amt):
+        self.balance = self.balance - amt
+
+    def inquiry(self):
+        return "Name={}, balance={}".format(self.name, self.balance)
+
+    @classmethod
+    def from_json(cls, params_json):
+        params = json.loads(params_json)
+        return cls(params.get("name"), params.get("balance"))
+
+    @staticmethod
+    def type():
+        return "Current Account"
+```
+
+Пример использования классовых методов &mdash; фабрики для создания объектов. Представьте что данные для класса `Account` приходят в различных форматах: кортежи, JSON, строки. Возможности определить несколько методов `__init__` нет, поэтому классовые методы удобны для этой ситуации. Приведённый выше класс `Account` инициализируется строкой с JSON, для этого мы определили классовый метод `from_json` который принимает строку, извлекает параметры из JSON и создаёт объект используя извлечённые параметры.
+
+Другой пример классового метода &mdash; [dict.fromkeys](https://docs.python.org/3/library/stdtypes.html#dict.fromkeys). Этот метод создаёт словарь из последовательности ключей и значений.
 
