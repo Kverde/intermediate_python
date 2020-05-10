@@ -2994,3 +2994,332 @@ class Account(object):
 
 Другой пример классового метода &mdash; [dict.fromkeys](https://docs.python.org/3/library/stdtypes.html#dict.fromkeys). Этот метод создаёт словарь из последовательности ключей и значений.
 
+### 6.6 Дескрипторы и свойства
+
+Дескрипторы являются эзотерической, но неотъемлемой частью Pyhon. Они широко используются в коде на Python и хорошее понимание дескрипторов даст более глубокое понимание языка. Рассмотрим три случая когда разработчики сталкиваются с дескрипторами.
+
+**1**
+
+Рассмотрим программу в которой нужно выполнять элементарную проверку типов данных аттрибутов объектов. Python это динамический язык и не поддерживает проверку типов, но это не мешает реализовывать проверку типов самостоятельно. Способ проверки типов атируботов может иметь следующую форму:
+
+```pyton
+    def __init__(self, name, age):
+        
+        if isinstance(name, str):
+            self.name = name
+        else:
+            raise TypeError("Must be a string")
+        
+        if isinstance(age, int):
+            self.age = age
+        else:
+            raise TypeError("Must be an int")
+```
+
+Этот метод метод может быть примене когда нужно проверить несколько атрибутов, но при увелечении их числа становится громоздким. Алтрернатива, ввести функцию `check(type, val)` и использовать её в методе `__init__()` перед присваиванием, но это не может быть элегантно применено для установки значений атрибутов после инициализации. Ещё одно быстрое решение —  использование геттера и сеттера, как в Java, но это не путь Python.
+
+**2**
+
+Рассмотрим программу в которой атрибуты объекта должны быть только для чтения после инициализации. Решение использующее специальные методы Python неуклюже и громоздко.
+
+**3**
+
+В конце, рассмотрим программу в которой доступ к атрибутам настраивается. Это может быть регистрация доступа к атрибуту или разные виды изинеения атрибута. Так же не сложно предстваить решение для этой задачи, но это решение будет неуклюжим и его не получится использовать повторно.
+
+**4**
+
+Все описанные задачи соединяются фактом что они все связаны со ссылками на атрибуты.
+
+#### Введение в дескрипторы Python
+
+Дескрипторы предоставляют элегантное, простое и надежное решение для всех описанных выше задач. Дескриптор — это объект представляющий значение атрибута. Это означает что если объект `account` содержит атрибут `name`, дескриптор это другой объект который может использоваться для представления значения содержащегося в атрибуте `name`. Объект дескриптора реализует специальные методы протокола дескрипторов: `__get__`, `__set__`, `__delete__`. Сигнатура каждого из этих методов показана ниже:
+
+```python
+descr.__get__(self, obj, type=None) --> value
+descr.__set__(self, obj, value) --> None
+descr.__delete__(self, obj) --> None
+```
+
+Объекты реализующие только метод `__get__` не являются дескрипторами данных, поэтому их можно только читать после инициализации. Объекты реализующие `__get__` и `__set__` являются дескрипторами данных, что означает что такие объекты доступны для записи.
+
+Для лучшего понимания дескрипторов рассмотрим решение описанных в предыдущей секции проблем с помощью дескрипторов. Реализация проверки типов через дескрипторы является простой задачей:
+
+```python
+class TypedAttribute:
+    def __init__(self, name, type, default=None):
+        self.name = "_" + name
+        self.type = type
+        self.default = default if default else type()
+
+    def __get__(self, instance, cls):
+        return getattr(instance, self.name, self.default)
+
+    def __set__(self, instance, value):
+        if not isinstance(value, self.type):
+            raise TypeError("Must be a %s" % self.type)
+        setattr(instance, self.name, value)
+
+    def __delete__(self, instance):
+        raise AttributeError("Can't delete attribute")
+
+
+class Account:
+    name = TypedAttribute("name", str)
+    balance = TypedAttribute("balance", int, 42)
+
+
+acct = Account()
+acct.name = "obi"
+acct.balance = 1234
+
+print(acct.balance) # 1234
+print(acct.name) # obi
+acct.balance = '1234' # TypeError: Must be a <class 'int'>
+```
+
+В этом примере, дескриптор `TypedAttrivute` принудительно производит элементарную проверку типа атрибута атрибута класса куда он добавлен. Важно отметить, что дескрипторы эффективны в случае если они объявлены на уровне класса (как в примере), а не на уровне экземпляра в `__init__`.
+
+Дескрипторы являются неотъемлемой частью языка Python. Дескрипторы предоставляют механизм для свойств, статичных методов, классовых методов и других функций в классах Python. Дескриптор является первым типов объектов который ищется при использовании ссылки на атрибут. Когда на объекты ссылаются, ссылка `b.x` преобразуется в `type(b).__dict__['x'].__get__(b, type(b))`. 
+
+Алгоритм поиска атрибута:
+
+1. В `type(b).__dict__` ищется имя атрибута и если найден дескриптор данных, возвращается результат вызова метода `__get__` дескриптора. Если не найден, то производится поиск во всех базовых классах `type(b)` таким же способом.
+2. Поиск в `b.__dict__` и если найдено имя атрибута, дескриптор возвращается.
+3. Поиск в `type(b).__dict__` поиск дескриптора только для чтения, и если найден он возвращается.
+4. Если имя атрибута не найдено, то генерируется исключение `AttributeError` или вызывается метод `__getattr()`.
+
+Эта цепочка может быть переопределена определением пользовательского метода `__getattribute__`. Последовательность описанная выше содержится в метода `__getattribute__` по умолчанию.
+
+Реализация решения для второй и третьей проблемы так же очень проста. Атрибут доступный только для чтения реализуется дескриптором только для чтения — дескриптором без метода `__set__`. Для добавления настраиваемого доступа к атрибутам, соответствующая функциональность добавляется в методы `__get__` и `__set__`.
+
+#### Классовые свойства
+
+Определение классов дескрипторов каждый раз когда нужен дескриптор громоздко. Свойства Python предоставляют удобный способ добавления дескрипторов данных к атрибутам. Сигнатура функции `property`:
+
+```pythin
+property(fget=None, fset=None, fdel=None, doc=None) -> property attribute 
+```
+
+`fget`, `fset`, и `fdel` это методы геттера, сеттера и deleter для атрибутов класса. Процесс создания свойств иллюстрируется следующим примером:
+
+```python
+class Accout(object):
+    def __init__(self):
+        self._acct_num = None
+
+    def get_acct_num(self):
+        return self._acct_num
+
+    def set_acct_num(self, value):
+        self._acct_num = value
+
+    def del_acct_num(self):
+        del self._acct_num
+
+    acct_num = property(get_acct_num, set_acct_num, del_acct_num, "Account number property.")
+```
+
+Если `acct` это экземпляр `Account`, то `acct.acct_num` вызовет геттер, `acct.acct_num = value` вызовет сеттер и `del acct_num.acct_num` вызовет deleter.
+
+Объект свойства и функционал который можно реализовать в Python иллюстрируется в [Descriptor How-To Guide](https://docs.python.org/3/howto/descriptor.html):
+
+```python
+class Property(object):
+    "Emulate PyProperty_Type() in Objects/descrobject.c"
+
+    def __init__(self, fget=None, fset=None, fdel=None, doc=None):
+        self.fget = fget
+        self.fset = fset
+        self.fdel = fdel
+        if doc is None and fget is not None:
+            doc = fget.__doc__
+        self.__doc__ = doc
+
+    def __get__(self, obj, objtype=None):
+        if obj is None:
+            return self
+        if self.fget is None:
+            raise AttributeError("unreadable attribute")
+        return self.fget(obj)
+
+    def __set__(self, obj, value):
+        if self.fset is None:
+            raise AttributeError("can't set attribute")
+        self.fset(obj, value)
+
+    def __delete__(self, obj):
+        if self.fdel is None:
+            raise AttributeError("can't delete attribute")
+        self.fdel(obj)
+
+    def getter(self, fget):
+        return type(self)(fget, self.fset, self.fdel, self.__doc__)
+
+    def setter(self, fset):
+        return type(self)(self.fget, fset, self.fdel, self.__doc__)
+
+    def deleter(self, fdel):
+        return type(self)(self.fget, self.fset, fdel, self.__doc__)
+```
+
+Python так же предоставляет декоратор`@property ` который используется для создания атрибутов только для чтения. Объект свойства содержит функции-декораторы `getter`, `setter` и `deleteter` которые используются для создания копии свойства с соответствующей функцией доступа установленной на декорируемую функцию. Это демонстрируется в следующем примере:
+
+```python
+class C(object):
+    def __init__(self):
+        self._x = None
+
+    @property
+    # x это свойство. декоратор создаёт свойство только для чтения
+    def x(self):
+        return self._x
+
+    @x.setter
+    # сеттер свойства x делает свойство записываемым
+    def x(self, value):
+        self._x = value
+
+    @x.deleter
+    def x(self):
+        del self._x
+```
+
+Понимание дескрипторов улучшает наше понимание того что в действительности происходит в течении вызова метода. Заметьте что методы хранятся как обычный функции в словаре класса:
+
+```python
+>>>Account.inquiry
+<function Account.inquiry at 0x101a3e598>
+>>>
+```
+
+В тоже время, методы объекта имеют тип связанного метода:
+
+```python
+>>> x = Account("nkem", 10)
+>>> x.inquiry
+<bound method Account.inquiry of <Account object at 0x101a3c588>>
+```
+
+Для понимания как эта трансформация происходит, заметьте что связанные методы это просто обертка вокруг классовой функции. Функции это дескрипторы потому что они содержат метод `__get__` так что ссылка на функцию возвращает вызов метода `__get__` функции желаемого типа, саму функцию или связанный метод, в зависимости от того откуда ссылка — из класса или из экземпляра класса. Нетрудно представить как статичные или классовые методы могут быть реализованы дескриптором функции.
+
+### 6.7 Абстрактные базовые классы
+
+Чтобы классы реализовывали заданный набор методов в статически типизированных языках, таких как Java, используются интерфейсы и абстрактные классы.
+
+Простая реализация такого контракта в Python &mdash; добавить в базовый класс методы по умолчанию, выбрасывающие исключение `NotImplementedError`. Такое решение неполное: наследники могут не переопределить все методы базового класса, а проблема обнаружится только во время выполнения программы.
+
+Рассмотрим другую ситуацию &mdash; использование одного объекта для замещения другого. [Заместитель](https://ru.wikipedia.org/wiki/Заместитель_(шаблон_проектирования)) перехватывает все вызовы и передаёт их в скрываемый объект. Заместитель реализует все нужные методы, но проверку типа через `isinstance` он не проходит, так как имеет тип отличный от замещаемого объекта.
+
+В Python такие задачи решаются через абстрактные базовые классы, реализуемые модулем `abc`. Этот модуль определяет мета-класс и набор декораторов. Для определения абстрактного базового класса мы устанавливаем `ABCMeta` как мета-класс абстрактного класса и помечаем декораторами `@abstractmethod` и `@abstractproperty` методы и свойства которые должны быть реализованы в неабстрактных потомках.
+
+<!--more-->
+
+Если потомки не реализуют абстрактные методы и свойства то не смогут создавать объекты:
+
+```python
+from abc import ABCMeta, abstractmethod
+
+class Vehicle(object):
+    
+	__meta-class__ = ABCMeta
+	
+    @abstractmethod
+
+    def change_gear(self):
+        pass
+
+    @abstractmethod
+    def start_engine(self):
+        pass
+
+class Car(Vehicle):
+
+    def __init__(self, make, model, color):
+        self.make = make
+        self.model = model
+        self.color = color
+```
+
+```python
+# abstract methods not implemented
+>>> car = Car("Toyota", "Avensis", "silver")
+
+Traceback (most recent call last):
+File "<stdin>", line 1, in <module>
+TypeError: Can't instantiate abstract class Car with abstract methods change_gear, start_engine
+```
+
+Как только класс реализовал все абстрактные методы появляется возможность создавать объекты:
+
+```python
+from abc import ABCMeta, abstractmethod
+
+class Vehicle(object):
+
+    __meta-class__ = ABCMeta
+
+    @abstractmethod
+    def change_gear(self):
+        pass
+
+    @abstractmethod
+    def start_engine(self):
+        pass
+
+class Car(Vehicle):
+    
+	def __init__(self, make, model, color):
+        self.make = make
+        self.model = model
+        self.color = color
+
+    def change_gear(self):
+        print("Changing gear")
+
+    def start_engine(self):
+        print("Changing engine")
+```
+
+```python
+>>> car = Car("Toyota", "Avensis", "silver")
+>>> print(isinstance(car, Vehicle))
+True
+```
+
+Абстрактные классы позволяет регистрировать существующие классы как часть своей иерархии, не проводя проверок на реализацию методов и свойств. Это простое решение второй проблемы открывающей параграф. Абстрактный класс регистрирует класс заместитель и проверка `isinstance` возвращает корректное значение:
+
+```python
+from abc import ABCMeta, abstractmethod
+
+class Vehicle(object):
+
+    __meta-class__ = ABCMeta
+
+    @abstractmethod
+    def change_gear(self):
+        pass
+
+    @abstractmethod
+    def start_engine(self):
+        pass
+
+class Car(object):
+    def __init__(self, make, model, color):
+        self.make = make
+        self.model = model
+        self.color = color
+```
+
+```python
+>>> Vehicle.register(Car)
+>>> car = Car("Toyota", "Avensis", "silver")
+>>> print(isinstance(car, Vehicle))
+True
+```
+
+Абстрактные базовые классы широко используются в библиотеке Python. Они предоставляют средство для группировки классов, например, числовых типов, которые имеют относительно плоскую иерархию. Модуль `collections` также содержит абстрактные базовые классы для различных наборов операций с множествами, последовательностями и словарями. Абстрактные базовые классы Python предоставляют возможность применять контракты между классами такие же как интерфейсы в Java.
+
+
+
+
+
