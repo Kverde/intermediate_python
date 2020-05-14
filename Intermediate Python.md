@@ -3497,3 +3497,235 @@ print(func()) # 2
 В этом примере, функция `counter` определена внутри другой функции `make_counter` и функция `counter` возвращается каждый раз при запуске `make_counter`.
 
 Функция, возвращаемую `make_counter`, присваивается переменной `func`. Переменная ссылается на объект функции и вызывается точно так же как и любая другая функция.
+
+### 7.3 Функции это дескрипторы
+
+Как и обсуждалось в предыдущей главе, функции так же являются дескриптором. Исследование атрибутов функции показывает что функция содержит атрибут `__get__`, что делает функцию дескриптором только для чтения (non-data descriptor).
+
+```python
+def square(x):
+    return x**2
+
+print(dir(square))
+# ['__annotations__', '__call__', '__class__', '__closure__', '__code__', '__defaults__', '__delattr__', '__dict__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__', '__get__', '__getattribute__', '__globals__', '__gt__', '__hash__', '__init__', '__init_subclass__', '__kwdefaults__', '__le__', '__lt__', '__module__', '__name__', '__ne__', '__new__', '__qualname__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__']
+```
+
+Метод `__get__` вызывается каждый раз когда ссылаются на функцию и предоставляет механизм для обработки вызова метода из объекта или обычного вызова функции. Эта характеристика функции позволяет функции возвращать себя или связанный метод в зависимости от того где и как происходит ссылка на функцию.
+
+### 7.4 Вызов функций
+
+In addition to calling functions in the conventional way with normal arguments, Python also
+supports functions with variable number of arguments. These variable number of arguments come
+in three flavours that are described below:
+
+В дополнение к вызову функций обычным способом с нормальными аргументами, Python поддерживает функции с переменным количеством аргументов. Переменное количество аргументов доступно в трёх вариантах описанных далее.
+
+#### Значения аргументов по умолчанию
+
+Если все или некоторые из аргументов функции имеют значения по умолчанию, то функция может быть вызвана с несколькими аргументами, а для остальных будут использоваться значения по умолчанию.
+
+```python
+def show_args(arg, def_arg = 1, def_arg2 = 2):
+   return "arg = {}, def_arg = {}, def_arg2 = {}".format(arg, def_arg, def_arg2)
+```
+
+Функция `show_args` определена с одним нормальным позиционным аргументом `arg` и двумя аргументами со значениями по умолчанию: `def_arg` и `def_arg2`. Функция может быть вызвана любым из следующих способов:
+
+**1**
+
+На вход функции подаются только значения для позиционных аргументов без значений по умолчанию. Оставшиеся аргументы принимают значения по умолчанию.
+
+```python
+def show_args(arg, def_arg = 1, def_arg2 = 2):
+   return "arg = {}, def_arg = {}, def_arg2 = {}".format(arg, def_arg, def_arg2)
+
+
+print(show_args("tranquility"))
+# arg = tranquility, def_arg = 1, def_arg2 = 2
+```
+
+**2**
+
+На вход функции подаётся несколько аргументов переопределяющих значения аргументов по умолчанию:
+
+```python
+def show_args(arg, def_arg = 1, def_arg2 = 2):
+   return "arg = {}, def_arg = {}, def_arg2 = {}".format(arg, def_arg, def_arg2)
+
+
+print(show_args("tranquility", "to Houston"))
+# arg = tranquility, def_arg = to Houston, def_arg2 = 2
+```
+
+**3**
+
+На выход функции подаются все аргументы:
+
+```python
+def show_args(arg, def_arg = 1, def_arg2 = 2):
+   return "arg = {}, def_arg = {}, def_arg2 = {}".format(arg, def_arg, def_arg2)
+
+
+print(show_args("tranquility", "to Houston", "the eagle has landed"))
+# arg = tranquility, def_arg = to Houston, def_arg2 = the eagle has landed
+```
+
+---
+
+Очень важно осторожно использовать изменяемые структуры данных в качестве значений аргументов по умолчанию. Определение функции запускается только один раз поэтому изменяемые структуры данных создаются один раз во время определения функции. Это означает что одна и та же измененяемая структура данных используется для всех вызовов функций:
+
+```python
+def show_args_using_mutable_defaults(arg, def_arg = []):
+    def_arg.append("Hello World")
+    return "arg={}, def_arg={}".format(arg, def_arg)
+
+print(show_args_using_mutable_defaults("test"))
+# "arg=test, def_arg=['Hello World']"
+
+print(show_args_using_mutable_defaults("test 2"))
+# "arg=test 2, def_arg=['Hello World', 'Hello World']"
+```
+
+При каждом вызове функции, строка `Hello World` добавляется в список `def_arg` и после двух вызовов функции аргумент по умолчанию содержит две строки `Hello Wordl`. 
+
+#### Именованные аргументы
+
+Функцию можно вызвать с использованием именованных аргументов в формате `kwarg=value`. `kwarg` ссылается на имя аргумента использованное при определении функции.  Рассмотрим функцию с одним позиционным аргументом без значения по умолчанию и одним аргументом со значением по умолчанию:
+
+```python
+def show_args(arg, def_arg = 1):
+    return "arg = {}, def_arg = {}".format(arg, def_arg)
+
+
+test = 42
+```
+
+Эта функция может быть вызвана любым из следующих способов:
+
+```python
+test = 42
+
+show_args(arg = "test", def_arg = 3)
+show_args(test)
+show_args(arg = "test")
+show_args("test", 3)
+```
+
+При вызове функции именованные аргументы не должны появляться раньше не именованных, такой вызов функции не сработает:
+
+```python
+show_args(def_arg = 4)
+```
+
+Функции не поддерживают дублирование подстановки значения в один аргумент, следующий вызов неверен:
+
+```python
+show_args("test", arg="testing")
+```
+
+В примере выше, аргумент `arg` это позиционный аргумент, поэтому ему присевается значение `test`. Попытка присвоения именованному аргументу `arg` снова является попыткой множественного присвоения и она не удастся.
+
+Все именованные аргументы должны соответствовать одному из аргументов описанных в определении функции. Порядок именованных аргументов включая обязательные и необязательные аргументы неважен. Следующий вызов функции корректен:
+
+```python
+show_args(def_arg = "testing", arg = "test")
+```
+
+#### Список произвольных аргументов
+
+Python позволяет опередить функцию с переменным количеством аргументов которые передаются в функцию в виде кортежа:
+
+```python
+def write_multiple_items(file, separator, *args):
+    file.write(separator.join(args))
+```
+
+Произвольные аргументы должны идти за обычными аргументами, в этом примере, за аргументами`file` и `separator`. Пример вызова такой функции:
+
+```python
+f = open("test.txt", "wb")
+write_multiple_items(f, " ", "one", "two", "three")
+```
+
+Аргументы `one`, `two`, `three` соединяются в кортеж который доступен через периметр `args`. 
+
+#### Распаковка аргументов функции
+
+Иногда, аргументы для функции уже находятся в кортеже, списке или словаре. В этом случае аргументы можно распаковать в функцию с помощью операторов `*` и `**`. Рассмотрим следующую функцию с двумя позиционными аргументами:
+
+```python
+def print_args(a, b):
+    print(a)
+    print(b)
+```
+
+Если аргументы для вызова функции находятся в списке, то они распаковываются следующим способом:
+
+```python
+args = [1, 2]
+print_args(*args)
+# 1
+# 2
+```
+
+Словари распаковываются оператором `**`. Значения словаря подставляются в именованные аргументы:
+
+```python
+
+def parrot(voltage, state='a stiff', action='voom'):
+    print("-- This parrot wouldn’t", action)
+    print("if you put", voltage, "volts through it.")
+    print("E’s", state, "!")
+
+
+d = {"voltage": "four million", "state": "bleedin’ demised", "action": "VOOM"}
+parrot(**d)
+# -- This parrot wouldn’t VOOM
+# if you put four million volts through it.
+# E’s bleedin’ demised !
+```
+
+#### Параметры функции * и **
+
+Sometimes, when defining a function, it is not known before hand the number of arguments to
+expect. This leads to function definitions of the following signature:
+
+Иногда при определении функции неизвестно заранее какое ожидать количество аргументов. Это приводит к следующему определению функции:
+
+```python
+show_args(arg, *args, **kwargs)
+```
+
+Аргумент `*args` представляет неизвестной длины последовательность позиционных аргументов. Аргумент `**kwargs` представляет словарь именованных аргументов. Аргумент `*args` должен идти раньше аргумента `**kwargs` в определении функции.
+
+```python
+def show_args(arg, *args, **kwargs):
+    print(arg)
+    for item in args:
+        print(item)
+    for key, value in kwargs.items():
+        print(key, value)
+
+
+args = [1, 2, 3, 4]
+kwargs = dict(name='testing', age=24, year=2014)
+show_args("hey", *args, **kwargs)
+
+# hey
+# 1
+# 2
+# 3
+# 4
+# name testing
+# age 24
+# year 2014
+```
+
+Аргументы `*args` и `**kwargs` не обязательны:
+
+```python
+show_args("hey") 
+# hey
+```
+
+Такое тип определения функции играет большую роль в декораторах которые мы рассмотрим в следующей главе.
