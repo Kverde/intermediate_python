@@ -4061,5 +4061,146 @@ print(x)
 
 #### Модуль functools
 
+Модуль `functools` содержит функции высшего порядка которые получают и возвращают другие функции. Рассмотрим несколько функций из этого модуля.
 
+`partial(func, *args, **keywords)`
+
+Функция `partical` возвращает объект, которым может быть вызван как исходная функция `func` с уже подставленными аргументами `*arg` и `**keywords`. Если в эту новую функцию передать те же параметры, то они переопределят параметры установленные `partial`:
+
+```python
+from functools import partial
+
+basetwo = partial(int, base=2)
+basetwo.__doc__ = 'Convert base 2 string to an int.'
+
+print(basetwo('10010')) # 18
+print(basetwo('10010', base = 10)) # 10010
+```
+
+В этом примере, новый вызываемый объект `baseto` принимает число в бинарном виде и конвертирует в десятичное число. Исходная функция `int()`, принимающая два аргумента, оказалась обёрнута в новую функцию принимающую один аргумент.
+
+Для лучшего понимания рассмотрим возможный способ реализации функции `partial`:
+
+```python
+def partial(func, *args, **keywords):
+    def newfunc(*fargs, **fkeywords):
+        newkeywords = keywords.copy()
+        newkeywords.update(fkeywords)
+        return func(*(args + fargs), **newkeywords)
+
+    newfunc.func = func
+    newfunc.args = args
+    newfunc.keywords = keywords
+    return newfunc
+```
+
+Partial objects provide elegant solutions to some practical problems that are encountered
+during development. For example, suppose one has a list of points represented as tuples of
+(x,y) coordinates and there is a requirement to sort all the points according to their distance
+from some other central point. The following function computes the distance between two
+points in the xy plane:
+
+Функция `partial` предоставляет элегантное решение практических проблем встречающихся при разработке. Представим что имеется список точек представленных в виде кортежа координат `(x, y)` и есть требование отсортировать эти точки в соответствии с их расстоянием до другой центральной точки. Следующая функция вычисляет дистанцию между двумя точкам:
+
+```python
+import math
+
+points = [(1, 2), (3, 4), (5, 6), (7, 8)]
+
+
+def distance(p1, p2):
+    x1, y1 = p1
+    x2, y2 = p2
+    return math.hypot(x2 - x1, y2 - y1)
+```
+
+Встроенный методы списков `sort()` поддерживает аргумент `key` для настройки порядка сортировки, но он работает с функцией принимающей один аргумент, так что функция `distance()` не подойдёт. Метод `partial` даёт решение этой проблемы:
+
+```python
+pt = (4, 3)
+points.sort(key=functools.partial(distance, pt))
+
+print(points)
+# [(3, 4), (1, 2), (5, 6), (7, 8)]
+```
+
+Функция `partial` создаёт и возвращает вызываемый объект принимающий один аргумент — точку. Одновременно `partial` захватывает ссылку на точку `pt` и передаёт её в `distance()`. В итоге сортировка получает функцию которая принимает одну точку и вычисляет её расстояние до другой заданной ранее точки.
+
+`@functools.lru_cache(maxsize=128, typed=False)`
+
+После оборачивания функции этим декоратором, функция запоминает `maxsize` последних вызовов. При последующем вызове, если аргументы функции совпадают с теми что передавались ранее, то сразу возвращается закешированный результат. Когда достигнут `maxsize` самые старые значения удаляются. Декоратор использует словарь для кеширования, так что аргументы функции должны быть хешируемыми. Декоратор `lru_cache` предоставляет функцию `cache_info` для получения информации об использовании кеша.
+
+`@functools.singledispatch`
+
+Этот декоратор модифицирует функции в обобщённую функцию. У функции появляется возможность динамически обрабатывать перегрузку — одна функция может обрабатывать разные типы данных. Механизм демонстрируется в следующем примере:
+
+```python
+from functools import singledispatch 
+
+
+@singledispatch
+def fun(arg, verbose=False):
+    if verbose:
+        print("Let me just say,", end=" ")
+    print(arg)
+
+
+@fun.register(int)
+def _(arg, verbose=False):
+    if verbose:
+        print("Strength in numbers, eh?", end=" ")
+    print(arg)
+
+
+@fun.register(list)
+def _(arg, verbose=False):
+    if verbose:
+        print("Enumerate this:")
+    for i, elem in enumerate(arg):
+        print(i, elem)
+
+
+fun("Hello, world.")
+# Hello, world.
+
+fun(1, verbose=True)
+# Strength in numbers, eh? 1
+
+fun([1, 2, 3], verbose=True)
+# Enumerate this:
+# 0 1
+# 1 2
+# 2 3
+
+fun((1, 2, 3), verbose=True)
+# Let me just say, (1, 2, 3)
+```
+
+A generic function is defined with the @singledispatch function, the register decorator is
+then used to define functions for each type that is handled.
+
+Обобщённая функция определяется декоратором `@singledispatch`. Декоратор @register` используется для определения функций для каждого обрабатываемого типа. Выбор корректной функции базируется на типе первого аргумента при вызове функции, соответственно с именем декоратора (single — одиночный).
+
+В случае подходящей под передаваемый тип данных функции не зарегистрировано, то вызывается базовая обобщённая функция — та что обёрнута декоратором `@singledispatch`.
+
+#### Последовательности и функциональное программирование
+
+Последовательности такие как списки и кортежи играют центральную роль в функциональном программировании. Книга Структура и интерпретация компьютерных программ, одна из великих книг computer science когда либо написанных, посвящает почти целую главу дискуссии о последовательностях и их обработке. Важность последовательностей видна по их вездесущности языке. Встроенные функции, такие как `map` и `filter` принимают и производят последовательности. Другие встроенные функции, такие как `min`, `max`, `reduce`, принимают последовательность и возвращают значения. Функции вроде `range`, `dict.items()` производят последовательности.
+
+The ubiquity of sequences requires that they are represented efficiently. One could come up with
+multiple ways of representing sequences. For example, a naive way of implementing sequences
+would be to store all the members of a sequence in memory. This however has a significant drawback
+that sequences are limited in size to the RAM available on the machine. A more clever solution is
+to use a single object to represent sequences. This object knows how to compute the next required
+elements of the sequence on the fly just as it is needed. Python has a built-in protocol exactly for
+doing this, the __iter__ protocol. This is strongly related to generators, a brilliant feature of the
+language and these are both dived into in the next chapter.
+
+Вездесущность последовательностей требует чтобы они были реализованы эффективно. Существует несколько способов их реализации. Простой способ предполагает хранить все элементы последовательности в памяти. Это ограничивает длину последовательности оперативной памятью машины. Более умное решение представлять последовательность в виде одного объекта. Этот объект знает как вычислить следующий элемент последовательности и делает это когда необходимо. Python содержит встроенный протокол `__iter__` для реализации такого объекта. Похожее поведение реализуется генераторами — блистательной возможностью языка. Обе эти возможности рассмотрены в следующей главе.
+
+## 8. Итераторы и генераторы
+
+
+
+### 8.1 Итераторы
 
