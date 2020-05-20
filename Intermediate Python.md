@@ -3954,9 +3954,6 @@ squares = [x ** 2 for x in range(10)]
             for itemN in iterableN if conditionN ]
 ```
 
-The result of a list comprehension expression is a new list that results from evaluating the expression
-in the context of the for and if clauses that follow it. 
-
 Результатом генератора списков является новый список. Список формируется вычислением выражений в контексте предложений **for** и **if**.
 
 Пример создания списка квадратов чётных чисел между 0 и 10:
@@ -3971,10 +3968,6 @@ print(even_squares)
 Выражение `i ** 2` вычисляется в контексте предложения **for** которое перебирает числа от 0 до 10. Предложение **if** фильтрует нечётные числа.
 
 ##### Вложенный цикл for и генератор списков
-
-List comprehensions can also be used with multiple or nested for loops. Consider for example, the
-simple code fragment shown below that creates a tuple from pair of numbers drawn from the two
-sequences given.
 
 Генераторы списков могут использоваться с несколькими или вложенными списками. Рассмотрим пример, простой фрагмент кода показанный ниже создаёт кортеж из пары чисел используя две данные последовательности:
 
@@ -4094,12 +4087,6 @@ def partial(func, *args, **keywords):
     return newfunc
 ```
 
-Partial objects provide elegant solutions to some practical problems that are encountered
-during development. For example, suppose one has a list of points represented as tuples of
-(x,y) coordinates and there is a requirement to sort all the points according to their distance
-from some other central point. The following function computes the distance between two
-points in the xy plane:
-
 Функция `partial` предоставляет элегантное решение практических проблем встречающихся при разработке. Представим что имеется список точек представленных в виде кортежа координат `(x, y)` и есть требование отсортировать эти точки в соответствии с их расстоянием до другой центральной точки. Следующая функция вычисляет дистанцию между двумя точкам:
 
 ```python
@@ -4176,9 +4163,6 @@ fun((1, 2, 3), verbose=True)
 # Let me just say, (1, 2, 3)
 ```
 
-A generic function is defined with the @singledispatch function, the register decorator is
-then used to define functions for each type that is handled.
-
 Обобщённая функция определяется декоратором `@singledispatch`. Декоратор @register` используется для определения функций для каждого обрабатываемого типа. Выбор корректной функции базируется на типе первого аргумента при вызове функции, соответственно с именем декоратора (single — одиночный).
 
 В случае подходящей под передаваемый тип данных функции не зарегистрировано, то вызывается базовая обобщённая функция — та что обёрнута декоратором `@singledispatch`.
@@ -4187,20 +4171,245 @@ then used to define functions for each type that is handled.
 
 Последовательности такие как списки и кортежи играют центральную роль в функциональном программировании. Книга Структура и интерпретация компьютерных программ, одна из великих книг computer science когда либо написанных, посвящает почти целую главу дискуссии о последовательностях и их обработке. Важность последовательностей видна по их вездесущности языке. Встроенные функции, такие как `map` и `filter` принимают и производят последовательности. Другие встроенные функции, такие как `min`, `max`, `reduce`, принимают последовательность и возвращают значения. Функции вроде `range`, `dict.items()` производят последовательности.
 
-The ubiquity of sequences requires that they are represented efficiently. One could come up with
-multiple ways of representing sequences. For example, a naive way of implementing sequences
-would be to store all the members of a sequence in memory. This however has a significant drawback
-that sequences are limited in size to the RAM available on the machine. A more clever solution is
-to use a single object to represent sequences. This object knows how to compute the next required
-elements of the sequence on the fly just as it is needed. Python has a built-in protocol exactly for
-doing this, the __iter__ protocol. This is strongly related to generators, a brilliant feature of the
-language and these are both dived into in the next chapter.
-
 Вездесущность последовательностей требует чтобы они были реализованы эффективно. Существует несколько способов их реализации. Простой способ предполагает хранить все элементы последовательности в памяти. Это ограничивает длину последовательности оперативной памятью машины. Более умное решение представлять последовательность в виде одного объекта. Этот объект знает как вычислить следующий элемент последовательности и делает это когда необходимо. Python содержит встроенный протокол `__iter__` для реализации такого объекта. Похожее поведение реализуется генераторами — блистательной возможностью языка. Обе эти возможности рассмотрены в следующей главе.
 
 ## 8. Итераторы и генераторы
 
-
+В последней секции предыдущей главы мы обсудили важность последовательностей и способа их реализации в функциональном программировании. Специальные объекты — итераторы представляют последовательность в виде одного объекта который вычисляет и возвращает следующий элемент последовательности когда это необходимо. 
 
 ### 8.1 Итераторы
+
+Итерируемый объект Python это любой объект который имеет специальный метод `__iter__` возвращающий итератор. Вызов метода производится функцией `iter(obj)`. Итерируемые объекты используются в цикле `for…in`, примерами таких типов являются списки, кортежи, словари и множества. Итераторы — это объекты реализующие протокол итераторов. Протокол итераторов определяет два обязательных для итератора метода: `__iter__` и `__next__`.
+
+Метод `__iter__` вызывается при инициализации итератора. Он должен возвращать объект содержащий метод `__next__`.
+
+Метод `__next__` вызывается стандартной функцией `next()` принимающей на вход итератор. Метод итератора `__next__` должен возвращать следующее значение итерируемого объекта. Если последовательность закончилась метод должен сгенерировать исключение `StopIteration`, как сигнал к окончанию окончания процесса перебора. Метод `__next__` и исключение `StopIteration` используется циклом `for..in` для перебора последовательностей.
+
+Различайте итерируемый объект и итератор, потому что итерируемый объект это не всегда итератор:
+
+```python
+x = [1, 2, 3]
+print(type(x)) # <class 'list'>
+
+x_iter = iter(x)
+print(type(x_iter)) # <class 'list_iterator'>
+
+# x это итерируемый объект и может использоваться в циеле for..in
+# но x это не итератор, так как не содержит метод __next__
+print(dir(x))
+# ['__add__', '__class__', '__contains__', '__delattr__', '__delitem__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__', '__getattribute__', '__getitem__', '__gt__', '__hash__', '__iadd__', '__imul__', '__init__', '__iter__', '__le__', '__len__', '__lt__', '__mul__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__reversed__', '__rmul__', '__setattr__', '__setitem__', '__sizeof__', '__str__', '__subclasshook__', 'append', 'clear', 'copy', 'count', 'extend', 'index', 'insert', 'pop', 'remove', 'reverse', 'sort']
+
+# x_iter is это итератор так как содержит метод __iter__ и __next__
+print(dir(x_iter))
+# ['__class__', '__delattr__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__', '__getattribute__', '__gt__', '__hash__', '__init__', '__iter__', '__le__', '__length_hint__', '__lt__', '__ne__', '__new__', '__next__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__setstate__', '__sizeof__', '__str__', '__subclasshook__']
+```
+
+Итерируемый объект может сам быть итератором, и при вызове метода `__iter__` возвращать сам себя. Мы рассмотрим это далее.
+
+Любой класс полностью реализующий протокол итераторов может использоваться как итератор. Проиллюстрируем это реализацией итератора возвращающего числа Фибоначчи до заданного максимального значения:
+
+```python
+class Fib:
+    def __init__(self, max):
+        self.max = max
+
+    def __iter__(self):
+        self.a = 0
+        self.b = 1
+        return self 
+        # объект является одновременно и итератором и итерируемым объектом
+
+    def __next__(self):
+        fib = self.a
+        if fib > self.max:
+            raise StopIteration
+        self.a, self.b = self.b, self.a + self.b
+        return fib
+
+
+for i in Fib(10):
+  print(i)
+# 0
+# 1
+# 1
+# 2
+# 3
+# 5
+# 8
+```
+
+Пользовательская функция `range` для перебора числе может быть реализована в виде итератора:
+
+```python
+class CustomRange:
+    def __init__(self, max):
+        self.max = max
+        
+    def __iter__(self):
+        self.curr = 0
+        return self
+    
+    def __next__(self):
+        numb = self.curr
+        if self.curr >= self.max:
+            raise StopIteration
+        self.curr += 1
+        return numb
+
+
+for i in CustomRange(10):
+    print(i)
+# 0
+# 1
+# 2
+# 3
+# 4
+# 5
+# 6
+# 7
+# 8
+# 9
+```
+
+Рассмотрим два последних примера подробнее. Суть итератора в том что объект-итератор знает как вычислить элементы последовательности и возвращает их только когда они нужны, не все сразу. Объект `CustomRange` не возвращает все элементы в диапазоне при инициализации, вместо этого он имеет метод `__iter__` через который возвращает объект итератора. А объект итератора возвращает следующий элемент используя шаги заданные в методе `__next__`. Возможно даже объявить функцию `range` возвращающую все положительные целые числа (бесконечная последовательность) просто удалив верхнюю границу в методе `__next__`.
+
+Та же идея применяется к итератору `Fib` и встроенным функциям возвращающим последовательности. Например, встроенная функция `range` не возвращает список, как может показаться, а возвращает объект который возвращает итератор при вызове метода `__iter__`. Рассмотрим это на примере:
+
+```python
+ran = range(0, 10)
+print(type(ran)) # <class 'range'>
+
+
+print(dir(ran))
+# ['__class__', '__contains__', '__delattr__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__', '__getattribute__', '__getitem__', '__gt__', '__hash__', '__init__', '__iter__', '__le__', '__len__', '__lt__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__reversed__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', 'count', 'index', 'start', 'step', 'stop']
+
+iter = ran.__iter__()
+print(iter) # <range_iterator object at 0x1012a4090>
+
+print(type(iter)) # <class 'range_iterator'>
+
+print(iter.__next__()) # 0
+print(iter.__next__()) # 1
+print(iter.__next__()) # 2
+print(iter.__next__()) # 3
+print(iter.__next__()) # 4
+print(iter.__next__()) # 5
+print(iter.__next__()) # 6
+print(iter.__next__()) # 7
+print(iter.__next__()) # 8
+print(iter.__next__()) # 9
+
+print(iter.__next__())
+# Traceback (most recent call last):
+# File "<stdin>", line 1, in <module>
+# StopIteration
+```
+
+```python
+ran = range(10)
+print(ran) # range(0, 10)
+
+print(list(ran)) # используем список для получения всей последовательности
+# [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+```
+
+Протокол итератора реализует форму вычислений называемую ленивыми вычислениями: в каждый момент времени производится только необходимая в этот момент работа.
+
+#### Модуль itertools
+
+Концепция итераторов насколько важна что Python содержит модуль `itertools` предоставляющий несколько функций общего назначения возвращающих итераторы. Если передать результаты этих функций в конструктор списков `list()`, то полная последовательность будет получена сразу.
+
+`accumulate(iterable[, func])`
+
+Функция имеет два параметра: обязательный итерируемый объект и необязательную функцию со значением по умолчанию функцией `operator.add`.  Передаваемая функция должна принимать два аргумента и возвращать единичное значение. Элементы итерируемого объекта должны подходить для передачи в эту функцию. Вызов `accumulate` возвращает итератор представляющий результат применения переданной функции к элементам итерируемого объекта. Первый элемент, возвращаемый итератором, это первый элемент из итерируемого объекта, а последующие элементы это результат применения функции `func(n-элемент, предыдущий результат итератора)`.
+
+```python
+from itertools import *
+
+print(accumulate([1, 2, 3, 4, 5]))
+# <itertools.accumulate object at 0x101c67c08>
+
+print(list(accumulate([1, 2, 3, 4, 5])))
+# [1, 3, 6, 10, 15]
+
+
+import operator
+
+print(accumulate(range(1, 10), operator.mul))
+# <itertools.accumulate object at 0x101c6d0c8>
+
+print(list(accumulate(range(1, 10), operator.mul)))
+# [1, 2, 6, 24, 120, 720, 5040, 40320, 362880]
+```
+
+`chain(*iterables)`
+
+Функция принимает итерируемые объекты которые содержат другие итерируемые объекты и возвращает итератор представляющий объединение всех итерируемых объектов которые внутри переданных итерируемых объектов.
+
+```python
+from itertools import chain
+
+x = [['a', 'b', 'c'], ['d', 'e', 'f'], ['g', 'h', 'i']]
+
+print(chain.from_iterable(x)) # <itertools.chain object at 0x101c6a208>
+
+print(list(chain.from_iterable(x)))
+# ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i']
+```
+
+`combinations(iterable, r)`
+
+Функция возвращает итератор представляющий множество из `r` элементов подпоследовательностей элементов из переданного итерируемого объекта `iterable`. Элементы рассматриваются как уникальные на основе их значения, не на основе их позиции.
+
+```python
+from itertools import  combinations
+
+print(combinations('ABCDE', 3))
+# <itertools.combinations object at 0x101c71138>
+
+print(list(combinations('ABCDE', 3)))
+# [('A', 'B', 'C'), ('A', 'B', 'D'), ('A', 'B', 'E'), ('A', 'C', 'D'), ('A', 'C', 'E'), ('A', 'D', 'E'), ('B', 'C', 'D'), ('B', 'C', 'E'), ('B', 'D', 'E'), ('C', 'D', 'E')]
+```
+
+`filterfalse(predicate, iterable)`
+
+Функция возвращает итератор который фильтрует элементы из итерируемого объекта `iterable`. Этот итератор возвращает только те объекты для которых функция `predicate` возвращает `False`. Если `predicate` равна `None` то итератор возвращает все элементы равные `False`.
+
+`groupby(iterable, key=None)`
+
+Функция возвращает итератор который возвращает последовательные ключи и соответствующие им группы из итерируемого объекта.
+
+Если передаётся функция `key` то она используется для преобразования элементов из `iterable` в ключи. Если `key` не задан или равен `None` то элементы из `iterable` используются без изменения.  
+
+Обычно, итерируемый объект уже должен быть отсортирован с помощью используемой функции `key`. 
+
+```python
+from itertools import groupby
+
+
+a = {k: list(g) for k, g in groupby('AAAABBBCCD')}
+print(a)
+# {'D': ['D'], 'B': ['B', 'B', 'B'], 'A': ['A', 'A', 'A', 'A'], 'C': ['C', 'C']}
+
+
+b = [k for k, g in groupby('AAAABBBCCDAABBB')]
+print(b)
+# ['A', 'B', 'C', 'D', 'A', 'B']
+```
+
+`islice(terable, start, stop[, step])`
+
+Возвращает итератор которые возвращает элементы из итерируемого объекта внутри заданного диапазона. Если `start` не равен нулю то элементы из начала последовательности пропускаются пока не будет достигнут номер `start`. Затем элементы возвращаются последовательно с пропуском `step` элементов, если `step` больше единицы, пока не закончатся элементы.
+
+В отличии от обычных срезов (slicing) функция не поддерживает негативную значения для `start`, `stop` и `step`.
+
+`permutation(iterable, r=None)`
+
+Функция возвращает перестановку длины `r` из элементов `iterable`. Если `r` не задан или равен `None`, то вместо `r` используется длина `iterable`. Элементы рассматриваются как уникальные на основе их позиции, не на основе значения, это отличие от сочетаний (`combinations`) рассмотренных выше. Так что если элементы уникальные, то каждая перестановка тоже будет уникальная.
+
+`product(*iterables, repeat=1)`
+
+Возвращает итератор который возвращает элементы картезианского произведения выходящих итерируемых объектов. Эта функция эквивалентна вложенным циклам `for` в генераторах списков. Например, `product(A, B)` вернёт итератор который вернёт значения аналогичные `[(x, y) for x in A for y in B]`. Функция может вычислить произведение итерируемого объекта на самого себя с помощью аргумента `repeat`. Например, `product(A, repeat=4)` означает то же что и `product(A, A, A, A)`.
+
+### 8.2 Генераторы
 
